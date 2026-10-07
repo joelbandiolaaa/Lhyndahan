@@ -6,7 +6,7 @@ import { CategoryNav } from "@/components/shop/category-nav";
 import { EmptyState } from "@/components/ui/card";
 import { formatCutoff, formatDay } from "@/lib/dates";
 import { formatPeso } from "@/lib/money";
-import { getBatchPreview, getShopProducts, groupByCategory, primaryImage } from "@/lib/shop";
+import { getBatchPreview, getCategoryOrder, getShopProducts, groupByCategory, primaryImage } from "@/lib/shop";
 
 // Refresh at least every minute (dates move); admin edits refresh it instantly.
 export const revalidate = 60;
@@ -16,8 +16,8 @@ function slugifyCategory(c: string) {
 }
 
 export default async function ShopHome() {
-  const [products, batch] = await Promise.all([getShopProducts(), getBatchPreview()]);
-  const groups = groupByCategory(products);
+  const [products, batch, categoryOrder] = await Promise.all([getShopProducts(), getBatchPreview(), getCategoryOrder()]);
+  const groups = groupByCategory(products, categoryOrder);
 
   return (
     <main className="mx-auto w-full max-w-5xl bg-surface px-4 pb-8 md:my-4 md:rounded-[var(--radius-card)]">

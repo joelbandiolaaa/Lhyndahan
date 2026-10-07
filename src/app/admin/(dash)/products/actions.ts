@@ -26,7 +26,7 @@ export async function createProduct(input: ProductInput): Promise<ActionResult> 
     .insert({ ...parsed.data, slug: slugify(parsed.data.name) })
     .select("id")
     .single();
-  if (error) return { ok: false, message: "Couldn't save. Please try again." };
+  if (error) return { ok: false, message: error.code === "23503" ? "That category no longer exists. Pick another." : "Couldn't save. Please try again." };
 
   refresh();
   redirect(`/admin/products/${data.id}?created=1`);
@@ -40,7 +40,7 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Ac
 
   // Slug is kept on purpose so links already shared on Facebook keep working.
   const { error } = await supabase.from("products").update(parsed.data).eq("id", id);
-  if (error) return { ok: false, message: "Couldn't save. Please try again." };
+  if (error) return { ok: false, message: error.code === "23503" ? "That category no longer exists. Pick another." : "Couldn't save. Please try again." };
 
   refresh(id);
   return { ok: true, message: "Saved." };

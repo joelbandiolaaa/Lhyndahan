@@ -115,6 +115,28 @@ set role anon;
 select pg_temp.ok(pg_temp.err($q$delete from public.orders$q$) is not null, 'anon cannot delete orders');
 reset role;
 
+-- categories: anyone can read; only the admin can change; a product must use an existing one
+set role anon;
+select pg_temp.ok((select count(*) from public.categories) >= 7, 'anon can read categories');
+select pg_temp.ok(pg_temp.err($q$insert into public.categories (name) values ('Hack')$q$) is not null, 'anon cannot add a category');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claims', '{"role":"authenticated","email":"stranger@example.com"}', false);
+select pg_temp.ok(pg_temp.err($q$insert into public.categories (name) values ('Hack')$q$) is not null, 'non-admin cannot add a category');
+select set_config('request.jwt.claims', '{"role":"authenticated","email":"april@example.com"}', false);
+insert into public.categories (name, sort_order) values ('Cakes', 50);
+select pg_temp.ok(pg_temp.err($q$insert into public.categories (name) values ('cakes')$q$) is not null, 'category names are unique ignoring case');
+select pg_temp.ok(pg_temp.err($q$update public.products set category = 'Nope' where slug = 'hopia-monggo-x10'$q$) is not null, 'product cannot use a category that does not exist');
+update public.categories set name = 'Pastries' where name = 'Cakes';
+update public.products set category = 'Pastries' where slug = 'cheese-cake-x1';
+update public.categories set name = 'Bakes' where name = 'Pastries';
+select pg_temp.ok((select category from public.products where slug = 'cheese-cake-x1') = 'Bakes', 'renaming a category renames it on its products');
+select pg_temp.ok(pg_temp.err($q$delete from public.categories where name = 'Bakes'$q$) is not null, 'a category in use cannot be deleted');
+update public.products set category = 'Hopia' where slug = 'cheese-cake-x1';
+delete from public.categories where name = 'Bakes';
+select pg_temp.ok(not exists (select 1 from public.categories where name = 'Bakes'), 'an unused category can be deleted');
+reset role;
+
 -- retention: personal details of old orders are anonymised, totals and items stay
 update public.orders set created_at = now() - interval '200 days' where phone = '+639173333333';
 update public.customers set created_at = now() - interval '200 days' where phone = '+639173333333';

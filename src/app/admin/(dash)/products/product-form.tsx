@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, Notice } from "@/components/ui/card";
 import { Field, Input, Select, Textarea, Toggle } from "@/components/ui/field";
 import { formatPeso, profitPerPiece } from "@/lib/money";
-import { BAKERIES, CATEGORY_SUGGESTIONS, type ActionResult, type Product } from "@/lib/types";
+import { BAKERIES, type ActionResult, type Product } from "@/lib/types";
 import type { ProductInput } from "@/lib/validators";
 import { createProduct, deleteProduct, updateProduct } from "./actions";
 
@@ -15,11 +16,11 @@ type Draft = Omit<ProductInput, "supplier_price" | "selling_price" | "delivery_m
   delivery_markup: string;
 };
 
-export function ProductForm({ product }: { product?: Product }) {
+export function ProductForm({ product, categories }: { product?: Product; categories: string[] }) {
   const [draft, setDraft] = useState<Draft>({
     name: product?.name ?? "",
     bakery: product?.bakery ?? "Ribbonets",
-    category: product?.category ?? CATEGORY_SUGGESTIONS[0],
+    category: product?.category ?? categories[0] ?? "",
     description: product?.description ?? "",
     supplier_price: product?.supplier_price != null ? String(product.supplier_price) : "",
     selling_price: product ? String(product.selling_price) : "",
@@ -87,16 +88,22 @@ export function ProductForm({ product }: { product?: Product }) {
             </Select>
           )}
         </Field>
-        <Field label="Category" name="category" required error={errors.category} hint="Used to group products in the shop. Pick one or type a new one.">
+        <Field
+          label="Category"
+          name="category"
+          required
+          error={errors.category}
+          hint={<>Where it shows in the shop. <Link href="/admin/products/categories" className="text-link underline">Add or edit categories</Link></>}
+        >
           {(p) => (
-            <>
-              <Input {...p} list="category-options" value={draft.category} onChange={(e) => set("category", e.target.value)} maxLength={40} />
-              <datalist id="category-options">
-                {CATEGORY_SUGGESTIONS.map((c) => (
-                  <option key={c} value={c} />
-                ))}
-              </datalist>
-            </>
+            <Select {...p} value={draft.category} onChange={(e) => set("category", e.target.value)}>
+              {!categories.includes(draft.category) ? <option value={draft.category}>{draft.category || "Choose a category"}</option> : null}
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </Select>
           )}
         </Field>
         <Field label="Description" name="description" error={errors.description} hint="Flavor, what's in the box, number of pieces, etc.">

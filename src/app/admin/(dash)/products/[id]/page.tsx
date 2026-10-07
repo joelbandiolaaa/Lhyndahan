@@ -21,6 +21,7 @@ export default async function EditProductPage(props: PageProps<"/admin/products/
     .maybeSingle();
   if (!data) notFound();
 
+  const { data: cats } = await supabase.from("categories").select("name").order("sort_order").order("created_at");
   const product = data as ProductWithImages;
   const images = [...product.product_images].sort((a, b) => a.sort_order - b.sort_order);
 
@@ -33,7 +34,7 @@ export default async function EditProductPage(props: PageProps<"/admin/products/
       {created ? <Notice tone="success">Saved! You can now upload photos below.</Notice> : null}
 
       <ImageManager productId={product.id} productName={product.name} images={images} />
-      <ProductForm product={product} />
+      <ProductForm product={product} categories={(cats ?? []).map((c) => c.name)} />
     </div>
   );
 }

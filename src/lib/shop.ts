@@ -57,10 +57,21 @@ export function primaryImage(p: Pick<ProductWithImages, "product_images">) {
   return imgs.find((i) => i.is_primary) ?? imgs[0] ?? null;
 }
 
-export function groupByCategory<T extends { category: string }>(items: T[]) {
+/** Category names in the order the owner arranged them. */
+export async function getCategoryOrder(): Promise<string[]> {
+  const { data } = await supabasePublic().from("categories").select("name").order("sort_order").order("created_at");
+  return (data ?? []).map((c) => c.name as string);
+}
+
+/** Groups by category, following `order`; empty categories are skipped. */
+export function groupByCategory<T extends { category: string }>(items: T[], order: string[] = []) {
   const groups = new Map<string, T[]>();
   for (const item of items) groups.set(item.category, [...(groups.get(item.category) ?? []), item]);
-  return [...groups.entries()];
+  const rank = (name: string) => {
+    const i = order.indexOf(name);
+    return i === -1 ? order.length : i;
+  };
+  return [...groups.entries()].sort((a, b) => rank(a[0]) - rank(b[0]));
 }
 
 export const STATUS_LABEL: Record<string, string> = {

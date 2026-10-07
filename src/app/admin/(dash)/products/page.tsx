@@ -1,4 +1,4 @@
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, Plus, Tags } from "lucide-react";
 import Link from "next/link";
 import { ProductImg } from "@/components/product-image";
 import { ButtonLink } from "@/components/ui/button";
@@ -10,19 +10,16 @@ import type { ProductWithImages } from "@/lib/types";
 export default async function ProductsPage(props: PageProps<"/admin/products">) {
   const { deleted } = await props.searchParams;
   const { supabase } = await requireAdmin();
-  const { data, error } = await supabase
-    .from("products")
-    .select("*, product_images(*)")
-    .is("deleted_at", null)
-    .order("category")
-    .order("sort_order")
-    .order("created_at");
+  const [{ data, error }, { data: cats }] = await Promise.all([
+    supabase.from("products").select("*, product_images(*)").is("deleted_at", null).order("sort_order").order("created_at"),
+    supabase.from("categories").select("name").order("sort_order").order("created_at"),
+  ]);
 
   const products = (data ?? []) as ProductWithImages[];
   const groups = new Map<string, ProductWithImages[]>();
-  for (const p of [...products].sort((a, b) => a.sort_order - b.sort_order)) {
-    groups.set(p.category, [...(groups.get(p.category) ?? []), p]);
-  }
+  for (const c of cats ?? []) groups.set(c.name, []); // follow the owner's category order
+  for (const p of products) groups.set(p.category, [...(groups.get(p.category) ?? []), p]);
+  for (const [name, items] of groups) if (!items.length) groups.delete(name);
   const missingSupplier = products.filter((p) => p.supplier_price === null).length;
 
   return (
@@ -33,6 +30,9 @@ export default async function ProductsPage(props: PageProps<"/admin/products">) 
           <Plus size={18} aria-hidden /> New product
         </ButtonLink>
       </div>
+      <Link href="/admin/products/categories" className="tap -mt-3 flex min-h-11 items-center gap-1 self-start text-[17px] text-link">
+        <Tags size={18} aria-hidden /> Manage categories
+      </Link>
 
       {deleted ? <Notice tone="success">Product deleted.</Notice> : null}
       {missingSupplier > 0 ? (

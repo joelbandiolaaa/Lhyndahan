@@ -1,15 +1,7 @@
 export const BAKERIES = ["Ribbonets", "RSF Bakery", "D' Original", "Edson Hopia Tipas"] as const;
 export type Bakery = (typeof BAKERIES)[number];
 
-/** Suggestions only; any category name can be typed in the form. */
-export const CATEGORY_SUGGESTIONS = [
-  "Hopia / Sweets",
-  "Sweet Cassie",
-  "Crinkles",
-  "Polvoron",
-  "Cheesecake",
-  "Cheese Bulilit",
-];
+export type Category = { id: string; name: string; sort_order: number };
 
 export type Product = {
   id: string;
