@@ -81,7 +81,7 @@ Checks before pushing: `npx tsc --noEmit`, `npx eslint src`, `npm run build`.
 
 1. Import the repository in Vercel (framework: Next.js).
 2. Add the four environment variables above.
-3. Deploy. `vercel.json` has a daily cron that calls `/api/keep-alive` so the free Supabase project doesn't pause.
+3. Deploy. Once the repository is connected, every push to `main` deploys to production automatically. `vercel.json` has a daily cron that calls `/api/keep-alive` so the free Supabase project doesn't pause.
 
 ## Weekly routine
 
