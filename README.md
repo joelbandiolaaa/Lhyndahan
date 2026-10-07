@@ -65,6 +65,20 @@ Never put the secret key in client code or commit `.env.local`. Add the same fou
    ```
 5. Authentication → turn **off** "Allow new users to sign up", then create your admin user (same email, auto-confirm).
 
+## Rebuild the database from scratch
+
+`supabase/rebuild.sql` is every migration plus the product list in one file (regenerate it with `supabase/build-rebuild.sh` after adding a migration).
+
+1. Create a new Supabase project, open the SQL editor, paste `rebuild.sql`, run it once.
+2. After it runs:
+   - Set the admin email (`update public.settings ...`, see the setup steps above).
+   - Read the generated order secret with `select value from private.app_secrets where key = 'order_api_secret';` and use it as `ORDER_API_SECRET` in Vercel.
+   - Authentication: turn off sign-ups, create the admin user (same email, strong password).
+   - Put the new URL, publishable key and secret key in Vercel, then redeploy.
+3. Re-upload the payment QR codes in Admin → Settings.
+
+Orders, uploaded images and logins live only in Supabase; this file recreates the structure and products, not that data.
+
 ## Run locally
 
 Node.js 20.9 or newer.
