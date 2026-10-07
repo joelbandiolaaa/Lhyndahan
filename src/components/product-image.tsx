@@ -1,6 +1,4 @@
-/* eslint-disable @next/next/no-img-element --
-   Images are already resized to ≤1600px WebP on upload, and plain <img> works the
-   same on every free host without image-optimizer quotas. */
+import Image from "next/image";
 import { PRODUCT_BUCKET, publicStorageUrl } from "@/lib/env";
 
 /** "Hopia Monggo x10" → "HM". Skips size tokens like "x10" and symbols. */
@@ -21,6 +19,7 @@ export function ProductImg({
   name,
   className = "",
   priority = false,
+  sizes = "100vw",
 }: {
   path?: string | null;
   alt: string;
@@ -28,6 +27,8 @@ export function ProductImg({
   name?: string;
   className?: string;
   priority?: boolean;
+  /** Rendered width, so phones download a small copy instead of the full 1600px photo. */
+  sizes?: string;
 }) {
   if (!path) {
     // Branded placeholder until a real photo is uploaded.
@@ -44,11 +45,13 @@ export function ProductImg({
     );
   }
   return (
-    <img
+    <Image
       src={publicStorageUrl(PRODUCT_BUCKET, path)}
       alt={alt}
-      loading={priority ? "eager" : "lazy"}
-      decoding="async"
+      width={800}
+      height={800}
+      sizes={sizes}
+      priority={priority}
       className={`bg-sunken object-cover ${className}`}
     />
   );

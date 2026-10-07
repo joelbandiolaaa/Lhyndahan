@@ -68,7 +68,7 @@ export function CartView() {
           {lines.map((l) => (
             <li key={l.productId} className="flex gap-3 p-4">
               <Link href={`/p/${l.slug}`} className="shrink-0">
-                <ProductImg path={l.imagePath} name={l.name} alt={l.name} className="size-[72px] rounded-xl text-[18px]" />
+                <ProductImg path={l.imagePath} name={l.name} alt={l.name} sizes="72px" className="size-[72px] rounded-xl text-[18px]" />
               </Link>
               <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
                 <div className="flex items-start justify-between gap-3">

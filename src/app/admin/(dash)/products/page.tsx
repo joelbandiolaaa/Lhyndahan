@@ -62,7 +62,7 @@ export default async function ProductsPage(props: PageProps<"/admin/products">) 
               return (
                 <li key={p.id}>
                   <Link href={`/admin/products/${p.id}`} className="tap flex items-center gap-4 p-3 hover:bg-black/[0.03]">
-                    <ProductImg path={primary?.path} alt="" name={p.name} className="size-16 shrink-0 rounded-xl" />
+                    <ProductImg path={primary?.path} alt="" name={p.name} sizes="64px" className="size-16 shrink-0 rounded-xl" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[17px]">{p.name}</p>
                       <p className="num text-sm text-muted">

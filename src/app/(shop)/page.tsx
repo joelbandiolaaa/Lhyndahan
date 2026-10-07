@@ -82,6 +82,7 @@ export default async function ShopHome() {
                         name={p.name}
                         alt={p.name}
                         priority={gi === 0 && idx < 4}
+                        sizes="112px"
                         className="size-28 rounded-xl text-[22px]"
                       />
                       <div className="absolute -right-1.5 -bottom-1.5">

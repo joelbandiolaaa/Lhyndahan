@@ -33,6 +33,7 @@ export function Gallery({ name, paths }: { name: string; paths: string[] }) {
             path={path}
             alt={`${name}, photo ${i + 1} of ${paths.length}`}
             priority={i === 0}
+            sizes="(min-width: 768px) 560px, 100vw"
             className="aspect-square w-full shrink-0 snap-center"
           />
         ))}

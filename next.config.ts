@@ -33,8 +33,19 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "geolocation=(self), camera=(), microphone=(), payment=()" },
 ];
 
+// Product photos come from Supabase Storage; Next resizes them per screen (a 112px thumbnail
+// should not download the full 1600px photo). Local QA against a mock server is allowed too.
+const isLocalStorage = supabaseOrigin.startsWith("http://localhost");
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" },
+      ...(isLocalStorage ? [{ protocol: "http" as const, hostname: "localhost", port: "54321", pathname: "/storage/v1/object/public/**" }] : []),
+    ],
+    dangerouslyAllowLocalIP: isLocalStorage,
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

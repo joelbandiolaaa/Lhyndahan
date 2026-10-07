@@ -92,7 +92,7 @@ export function ImageManager({
           {images.map((img, idx) => (
             <li key={img.id} className="flex items-center gap-3">
               <div className="relative">
-                <ProductImg path={img.path} alt={`${productName} photo ${idx + 1}`} name={productName} className="size-20 rounded-xl" />
+                <ProductImg path={img.path} alt={`${productName} photo ${idx + 1}`} name={productName} sizes="80px" className="size-20 rounded-xl" />
                 {img.is_primary ? (
                   <span className="absolute -top-1.5 -left-1.5 rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold text-accent-ink">
                     Main
