@@ -101,6 +101,20 @@ select pg_temp.ok(not exists (select 1 from information_schema.role_table_grants
                               where table_schema = 'private' and grantee in ('anon','authenticated')),
   'Secret table not granted to the public');
 
+-- admin can permanently delete a CANCELLED order; its items go with it, other orders stay
+set role authenticated;
+select set_config('request.jwt.claims', '{"role":"authenticated","email":"april@example.com"}', false);
+create temp table gone as
+  select id from public.orders where phone = '+639175555555' order by order_no limit 1;
+update public.orders set status = 'cancelled' where id in (select id from gone);
+delete from public.orders where id in (select id from gone) and status = 'cancelled';
+select pg_temp.ok((select count(*) from public.order_items where order_id in (select id from gone)) = 0, 'Deleting an order removes its items');
+select pg_temp.ok((select count(*) from public.orders where phone = '+639175555555') = 4, 'Only the cancelled order was deleted');
+reset role;
+set role anon;
+select pg_temp.ok(pg_temp.err($q$delete from public.orders$q$) is not null, 'anon cannot delete orders');
+reset role;
+
 -- retention: personal details of old orders are anonymised, totals and items stay
 update public.orders set created_at = now() - interval '200 days' where phone = '+639173333333';
 update public.customers set created_at = now() - interval '200 days' where phone = '+639173333333';
