@@ -168,7 +168,7 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
                   <Phone size={15} aria-hidden /> {formatPhone(o.phone)}
                 </a>
                 <p className="mt-1">
-                  <span className="font-medium">{o.delivery_type === "office" ? "KUS" : "Outside"}</span> ·{" "}
+                  <span className="font-medium">{o.delivery_type === "office" ? "KUS" : "My address"}</span> ·{" "}
                   {formatDay(o.delivery_date)}
                 </p>
                 {o.delivery_type === "outside" ? <p className="text-muted">{o.address}</p> : null}

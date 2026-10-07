@@ -70,7 +70,7 @@ export async function GET(req: Request) {
     lines.push(
       [
         o.code, manila(o.created_at), o.batches?.code ?? "", o.name, formatPhone(o.phone),
-        o.delivery_type === "office" ? "KUS" : "Outside", o.delivery_date, o.address, o.landmark, o.map_url ?? "",
+        o.delivery_type === "office" ? "KUS" : "My address", o.delivery_date, o.address, o.landmark, o.map_url ?? "",
         o.order_items.map((i) => `${i.qty}x ${i.product_name}`).join("; "), pieces, Number(o.total),
         paymentShortLabel(o.payment_method, o.qr_provider), o.paid ? "Paid" : "Unpaid", STATUS_LABELS[o.status],
         known ? cost : "", known ? profit : "", o.notes ?? "",

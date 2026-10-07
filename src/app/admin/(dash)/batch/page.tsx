@@ -1,3 +1,5 @@
+import { Download } from "lucide-react";
+import { buttonClass } from "@/components/ui/button";
 import { Card, EmptyState, Notice } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
 import { batchContext, type Batch } from "@/lib/admin";
@@ -54,10 +56,15 @@ export default async function BatchPage(props: PageProps<"/admin/batch">) {
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="font-display text-[34px] leading-tight">Batch summary</h1>
-        <BatchPicker batches={batches} value={batch.id} currentId={current?.id ?? null} />
+        <div className="flex flex-wrap items-center gap-2">
+          <BatchPicker batches={batches} value={batch.id} currentId={current?.id ?? null} />
+          <a href={`/admin/batch/export?batch=${batch.id}`} className={buttonClass("secondary", "md")}>
+            <Download size={18} aria-hidden /> Download Excel
+          </a>
+        </div>
       </div>
       <p className="-mt-2 text-[15px] text-muted">
-        Delivery {formatDay(batch.office_date)} (office) and {formatDay(batch.outside_date)} (outside)
+        Delivery {formatDay(batch.office_date)} (KUS) and {formatDay(batch.outside_date)} (My address)
         {isOpen ? " · orders still open, more can be added" : ""}
       </p>
 

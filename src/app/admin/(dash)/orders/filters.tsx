@@ -12,7 +12,7 @@ const selectClass =
 
 const FILTERS = [
   { key: "paid", label: "Payment", options: [["", "Payment: all"], ["unpaid", "Unpaid"], ["paid", "Paid"]] },
-  { key: "delivery", label: "Delivery", options: [["", "Delivery: all"], ["office", "KUS (Friday)"], ["outside", "Outside (Saturday)"]] },
+  { key: "delivery", label: "Delivery", options: [["", "Delivery: all"], ["office", "KUS (Friday)"], ["outside", "My address (Saturday)"]] },
   { key: "pay", label: "Payment method", options: [["", "COD and QR"], ["cod", "COD"], ["qr", "QR Code"]] },
 ] as const;
 

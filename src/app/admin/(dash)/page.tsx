@@ -160,7 +160,7 @@ export default async function AdminHome(props: PageProps<"/admin">) {
             <h2 className="text-[15px] font-semibold">Delivery</h2>
             <ul className="mt-3 flex flex-col gap-3">
               <Bar label="KUS (Friday)" value={d.by_delivery.office ?? 0} total={deliveryTotal} />
-              <Bar label="Outside (Saturday)" value={d.by_delivery.outside ?? 0} total={deliveryTotal} />
+              <Bar label="My address (Saturday)" value={d.by_delivery.outside ?? 0} total={deliveryTotal} />
             </ul>
           </Card>
           <Card className="p-4">
