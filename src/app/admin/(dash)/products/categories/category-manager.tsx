@@ -50,14 +50,16 @@ export function CategoryManager({ categories }: { categories: CategoryRow[] }) {
                   </button>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="num text-sm text-muted">{c.count} product(s)</span>
+                  <span className="num text-sm text-muted">{c.count} product(s){c.count > 0 ? " · move them to delete" : ""}</span>
                   <span className="flex-1" />
-                  <Button
-                    type="button" loading={pending} disabled={value.trim() === c.name}
-                    onClick={() => run(() => renameCategory(c.id, value), () => setNames((n) => ({ ...n, [c.id]: c.name })))}
-                  >
-                    Save name
-                  </Button>
+                  {value.trim() !== c.name ? (
+                    <Button
+                      type="button" loading={pending}
+                      onClick={() => run(() => renameCategory(c.id, value), () => setNames((n) => Object.fromEntries(Object.entries(n).filter(([k]) => k !== c.id))))}
+                    >
+                      Save name
+                    </Button>
+                  ) : null}
                   <Button
                     type="button" variant="danger" disabled={pending || c.count > 0}
                     title={c.count > 0 ? "Move its products to another category first" : undefined}
