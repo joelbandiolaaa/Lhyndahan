@@ -200,7 +200,7 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
                 </li>
               </ul>
 
-              <OrderActions id={o.id} status={o.status} paid={o.paid} paymentMethod={o.payment_method} />
+              <OrderActions id={o.id} code={o.code} status={o.status} paid={o.paid} />
             </Card>
           </li>
         ))}

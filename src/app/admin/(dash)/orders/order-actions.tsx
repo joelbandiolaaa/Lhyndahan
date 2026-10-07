@@ -8,14 +8,14 @@ import { setOrderPaid, setOrderStatus } from "./actions";
 /** One-tap buttons: the next step in Pending → Ordered → Delivered, plus payment. */
 export function OrderActions({
   id,
+  code,
   status,
   paid,
-  paymentMethod,
 }: {
   id: string;
+  code: string;
   status: OrderStatus;
   paid: boolean;
-  paymentMethod: "cod" | "qr" | "gcash";
 }) {
   const [pending, start] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
@@ -57,15 +57,13 @@ export function OrderActions({
         ) : null}
         {!paid ? (
           <Button variant="secondary" loading={busy === "paid"} disabled={pending} onClick={() => run("paid", () => setOrderPaid(id, true))}>
-            {paymentMethod !== "cod" ? "Mark as Paid (payment confirmed)" : "Mark as Paid"}
+            Mark as Paid
           </Button>
         ) : (
           <Button variant="ghost" loading={busy === "unpaid"} disabled={pending} onClick={() => run("unpaid", () => setOrderPaid(id, false))}>
             Mark as Unpaid
           </Button>
         )}
-      </div>
-      <div className="flex flex-wrap gap-2">
         {status !== "pending" ? (
           <Button variant="ghost" loading={busy === "back"} disabled={pending}
             onClick={() => run("back", () => setOrderStatus(id, status === "delivered" ? "ordered" : "pending"))}>
@@ -74,7 +72,7 @@ export function OrderActions({
         ) : null}
         <Button variant="danger" loading={busy === "cancel"} disabled={pending}
           onClick={() => {
-            if (confirm("Cancel this order? It won't count toward the supplier order or sales anymore.")) {
+            if (confirm(`Cancel order ${code}?\n\nIt won't count toward the supplier order, deliveries or sales anymore. You can move it back to Pending later if you change your mind.`)) {
               run("cancel", () => setOrderStatus(id, "cancelled"));
             }
           }}>
