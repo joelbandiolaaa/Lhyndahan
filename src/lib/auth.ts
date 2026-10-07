@@ -1,6 +1,8 @@
 import "server-only";
 
+import { createClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/env";
 import { supabaseServer } from "@/lib/supabase/server";
 
 /**
@@ -17,4 +19,15 @@ export async function requireAdmin() {
   if (error || !isAdmin) redirect("/admin/login?error=not-admin");
 
   return { supabase, email: String(claims.claims.email ?? "") };
+}
+
+/**
+ * Re-checks someone's password without touching their session (a throwaway client).
+ * Sensitive account changes ask for it again so a stolen/forgotten logged-in phone isn't enough.
+ */
+export async function verifyPassword(email: string, password: string): Promise<boolean> {
+  if (!password) return false;
+  const client = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { error } = await client.auth.signInWithPassword({ email, password });
+  return !error;
 }

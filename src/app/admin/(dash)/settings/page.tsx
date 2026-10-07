@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { SITE_BUCKET, publicStorageUrl } from "@/lib/env";
+import { EmailForm } from "../account/email-form";
 import { PasswordForm } from "../account/password-form";
 import { PaymentQrSettings, type QrRow } from "./payment-qr-settings";
 
@@ -27,6 +28,7 @@ export default async function SettingsPage() {
       <PaymentQrSettings qrs={qrs} />
       <div className="flex flex-col gap-2">
         <h2 className="px-1 text-[13px] font-medium tracking-wide text-muted uppercase">Account · {email}</h2>
+        <EmailForm currentEmail={email} />
         <PasswordForm />
       </div>
     </div>
