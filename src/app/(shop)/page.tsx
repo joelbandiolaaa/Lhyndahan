@@ -2,7 +2,6 @@ import { Clock, Truck } from "lucide-react";
 import Link from "next/link";
 import { ProductImg } from "@/components/product-image";
 import { AddButton } from "@/components/shop/add-button";
-import { CartBar } from "@/components/shop/cart-bar";
 import { CategoryNav } from "@/components/shop/category-nav";
 import { EmptyState } from "@/components/ui/card";
 import { formatCutoff, formatDay } from "@/lib/dates";
@@ -21,7 +20,7 @@ export default async function ShopHome() {
   const groups = groupByCategory(products);
 
   return (
-    <main className="mx-auto w-full max-w-5xl bg-surface px-4 pb-28 md:my-4 md:rounded-[var(--radius-card)]">
+    <main className="mx-auto w-full max-w-5xl bg-surface px-4 pb-8 md:my-4 md:rounded-[var(--radius-card)]">
       {/* Store header */}
       <section className="pt-5 pb-4">
         <h1 className="sr-only">Lhyndahan</h1>
@@ -63,7 +62,7 @@ export default async function ShopHome() {
       {groups.map(([category, items], gi) => (
         <section key={category} id={slugifyCategory(category)} className="scroll-mt-[7rem] pt-6">
           <h2 className="font-display text-[22px] leading-tight">{category}</h2>
-          <p className="text-[13px] text-muted">{items.length === 1 ? "item" : "items"}</p>
+          <p className="text-[13px] text-muted">{items.length} {items.length === 1 ? "item" : "items"}</p>
           <ul className="mt-2 grid divide-y divide-line md:grid-cols-2 md:gap-x-8 md:divide-y-0">
             {items.map((p, idx) => {
               const img = primaryImage(p);
@@ -99,7 +98,6 @@ export default async function ShopHome() {
         </section>
       ))}
 
-      <CartBar />
     </main>
   );
 }

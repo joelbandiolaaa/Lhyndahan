@@ -15,12 +15,14 @@ export function LookupForm({ defaultCode = "" }: { defaultCode?: string }) {
       <form action={action} className="flex flex-col gap-4">
         <Field label="Order number" name="code" required>
           {(p) => (
-            <Input {...p} name="code" defaultValue={defaultCode} placeholder="LH-0012" autoCapitalize="characters"
+            <Input {...p} name="code" defaultValue={state.values?.code ?? defaultCode} placeholder="LH-0012" autoCapitalize="characters"
               autoComplete="off" required />
           )}
         </Field>
         <Field label="Mobile number" name="phone" required>
-          {(p) => <Input {...p} name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="0917 123 4567" required />}
+          {(p) => (
+            <Input {...p} name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="0917 123 4567" defaultValue={state.values?.phone ?? ""} required />
+          )}
         </Field>
         {state.message ? <Notice tone="error">{state.message}</Notice> : null}
         <Button type="submit" size="lg" loading={pending}>

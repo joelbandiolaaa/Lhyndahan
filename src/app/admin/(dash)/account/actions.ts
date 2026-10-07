@@ -32,6 +32,8 @@ export async function changePassword(_prev: AccountState, formData: FormData): P
       message: error.code === "same_password" ? "Must be different from your current password." : "Couldn't change it. Please try again.",
     };
   }
+  // A changed password should end every other logged-in session (e.g. a forgotten phone).
+  await supabase.auth.signOut({ scope: "others" });
   return { ok: true, message: "Password changed." };
 }
 
@@ -78,7 +80,11 @@ export async function changeEmail(_prev: AccountState, formData: FormData): Prom
   }
   const { error: settingsError } = await svc.from("settings").update({ admin_email: newEmail, notify_email: notify }).eq("id", 1);
   if (settingsError) {
-    await svc.auth.admin.updateUserById(userId, { email: oldEmail, email_confirm: true });
+    const { error: revertError } = await svc.auth.admin.updateUserById(userId, { email: oldEmail, email_confirm: true });
+    if (revertError) {
+      console.error("changeEmail: revert failed", revertError.message);
+      return { ok: false, message: `Something went wrong and your login email may now be ${newEmail}. Try logging in with it, or ask for help.` };
+    }
     return { ok: false, message: "Couldn't change the email. Nothing was changed." };
   }
 

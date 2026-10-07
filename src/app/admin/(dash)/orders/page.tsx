@@ -65,7 +65,7 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
       .order("created_at", { ascending: false })
       .limit(300),
   );
-  if (status && status in STATUS_LABELS) query = query.eq("status", status);
+  if (status && Object.hasOwn(STATUS_LABELS, status)) query = query.eq("status", status);
   const { data: statusRows } = await applyFilters(supabase.from("orders").select("status").limit(5000));
   const counts: Record<string, number> = { all: 0 };
   for (const r of (statusRows ?? []) as { status: string }[]) {
@@ -164,17 +164,17 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
 
               <div className="flex flex-col gap-1 text-[15px]">
                 <p className="text-[17px]">{o.name}</p>
-                <a href={`tel:${o.phone}`} className="flex w-fit items-center gap-1.5 text-link">
+                <a href={`tel:${o.phone}`} className="inline-flex min-h-11 w-fit items-center gap-1.5 text-link">
                   <Phone size={15} aria-hidden /> {formatPhone(o.phone)}
                 </a>
                 <p className="mt-1">
                   <span className="font-medium">{o.delivery_type === "office" ? "KUS" : "Outside"}</span> ·{" "}
                   {formatDay(o.delivery_date)}
                 </p>
-                <p className="text-muted">{o.address}</p>
+                {o.delivery_type === "outside" ? <p className="text-muted">{o.address}</p> : null}
                 {o.landmark ? <p className="text-muted">Landmark: {o.landmark}</p> : null}
                 {o.map_url ? (
-                  <a href={o.map_url} target="_blank" rel="noopener noreferrer" className="flex w-fit items-center gap-1.5 text-link">
+                  <a href={o.map_url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-fit items-center gap-1.5 text-link">
                     <MapPin size={15} aria-hidden /> Open in Google Maps
                   </a>
                 ) : null}

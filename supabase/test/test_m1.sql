@@ -87,15 +87,15 @@ set role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', false);
 select pg_temp.ok((select count(*) from public.products) = 1, 'anon sees only the active product');
 select pg_temp.ok((select count(*) from public.product_images) = 1, 'anon sees only images of active products');
-select pg_temp.ok((select count(*) from public.orders) = 0, 'anon cannot read orders');
-select pg_temp.ok((select count(*) from public.customers) = 0, 'anon cannot read customers');
-select pg_temp.ok((select count(*) from public.settings) = 0, 'anon cannot read settings table');
+select pg_temp.ok(pg_temp.throws($q$select count(*) from public.orders$q$), 'anon cannot read orders (no privilege)');
+select pg_temp.ok(pg_temp.throws($q$select count(*) from public.customers$q$), 'anon cannot read customers (no privilege)');
+select pg_temp.ok(pg_temp.throws($q$select count(*) from public.settings$q$), 'anon cannot read settings table (no privilege)');
 select pg_temp.ok((select gcash_qr_path is null from public.get_public_settings()), 'anon can read public settings');
 select pg_temp.ok(pg_temp.throws($q$insert into public.products (slug,name,supplier_price,selling_price) values ('x','x',1,1)$q$),
   'anon cannot create products');
 select pg_temp.ok(pg_temp.throws($q$select public.get_or_create_batch(now())$q$),
   'anon cannot call get_or_create_batch');
-update public.products set selling_price = 1;  -- silently affects 0 rows under RLS
+select pg_temp.ok(pg_temp.throws($q$update public.products set selling_price = 1$q$), 'anon cannot update products (no privilege)');
 reset role;
 select pg_temp.ok((select selling_price from public.products where slug='hopia-monggo-x10') = 90,
   'anon update had no effect');

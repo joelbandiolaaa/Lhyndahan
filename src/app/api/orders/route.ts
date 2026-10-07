@@ -43,7 +43,12 @@ export async function POST(req: Request) {
   delete order.website;
 
   // Hash the IP so we never store it; used only for the per-hour limit.
-  const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || req.headers.get("x-real-ip") || "unknown";
+  // x-vercel-forwarded-for is set by Vercel itself and can't be spoofed by the visitor.
+  const ip =
+    req.headers.get("x-vercel-forwarded-for")?.split(",")[0].trim() ||
+    req.headers.get("x-real-ip") ||
+    (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() ||
+    "unknown";
   const ipHash = createHash("sha256").update(`${secret}:${ip}`).digest("hex");
 
   const { data, error } = await supabasePublic().rpc("create_order", { p: order, p_ip_hash: ipHash, p_secret: secret });

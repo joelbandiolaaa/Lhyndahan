@@ -23,7 +23,7 @@ export function QtyStepper({
   const atMin = value <= min;
   const showTrash = removable && value <= 1;
   const circle =
-    "tap flex size-9 items-center justify-center rounded-full border-[1.5px] border-accent text-link disabled:border-line disabled:text-muted/50";
+    "tap flex size-11 items-center justify-center rounded-full border-[1.5px] border-accent text-link disabled:border-line disabled:text-muted/50";
   return (
     <div role="group" aria-label={`Quantity of ${label}`} className="flex items-center gap-3">
       <button

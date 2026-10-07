@@ -26,10 +26,10 @@ export function EmailForm({ currentEmail }: { currentEmail: string }) {
         <Field label="New email" name="email" required>
           {(p) => <Input {...p} name="email" type="email" inputMode="email" autoComplete="off" required />}
         </Field>
-        <Field label="Repeat new email" name="confirm" required hint="Typed twice because a typo here would lock you out.">
+        <Field label="Repeat new email" name="email-confirm" required hint="Typed twice because a typo here would lock you out.">
           {(p) => <Input {...p} name="confirm" type="email" inputMode="email" autoComplete="off" required />}
         </Field>
-        <Field label="Current password" name="current" required>
+        <Field label="Current password" name="email-current" required>
           {(p) => <Input {...p} name="current" type="password" autoComplete="current-password" required />}
         </Field>
         {state.message ? <Notice tone={state.ok ? "success" : "error"}>{state.message}</Notice> : null}

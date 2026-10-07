@@ -25,24 +25,24 @@ function DeliveryCard({ o, n }: { o: Row; n: number }) {
   const due = amountDue(o);
   return (
     <Card className="break-inside-avoid p-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0">
           <p className="text-[13px] text-muted">
             <span className="num">#{n}</span> · <span className="num">{o.code}</span>
           </p>
           <p className="text-[17px] font-semibold">{o.name}</p>
-          <a href={`tel:${o.phone}`} className="flex items-center gap-1.5 text-[15px] text-link">
+          <a href={`tel:${o.phone}`} className="inline-flex min-h-11 items-center gap-1.5 text-[15px] whitespace-nowrap text-link">
             <Phone size={15} aria-hidden /> {formatPhone(o.phone)}
           </a>
         </div>
-        <div className="shrink-0 text-right">
+        <div className="shrink-0 sm:text-right">
           {due > 0 ? (
             <>
               <p className="text-[13px] text-muted">Collect (COD)</p>
               <p className="num text-[20px] font-semibold text-ink">{formatPeso(due)}</p>
             </>
           ) : (
-            <p className="rounded-full bg-success-soft px-3 py-1 text-[13px] font-semibold text-success">
+            <p className={`w-fit rounded-full px-3 py-1 text-[13px] font-semibold ${o.paid ? "bg-success-soft text-success" : "bg-warning-soft text-warning"}`}>
               {o.paid ? "Paid" : `${paymentShortLabel(o.payment_method, o.qr_provider)} · not yet confirmed`}
             </p>
           )}
@@ -63,7 +63,7 @@ function DeliveryCard({ o, n }: { o: Row; n: number }) {
           <p>{o.address}</p>
           {o.landmark ? <p className="text-muted">Landmark: {o.landmark}</p> : null}
           {o.map_url ? (
-            <a href={o.map_url} target="_blank" rel="noopener noreferrer" className="no-print flex w-fit items-center gap-1.5 text-link">
+            <a href={o.map_url} target="_blank" rel="noopener noreferrer" className="no-print inline-flex min-h-11 w-fit items-center gap-1.5 text-link">
               <MapPin size={15} aria-hidden /> Open in Maps <ExternalLink size={13} aria-hidden />
             </a>
           ) : null}

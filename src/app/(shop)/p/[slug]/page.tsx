@@ -38,7 +38,7 @@ export default async function ProductPage(props: PageProps<"/p/[slug]">) {
   const img = primaryImage(product);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 pb-32 md:pb-12">
+    <main className="mx-auto w-full max-w-5xl px-4 pb-6 md:pb-12">
       <Link href="/" className="tap -ml-2 flex min-h-11 w-fit items-center gap-0.5 px-2 text-[17px] text-link">
         <ChevronLeft size={20} aria-hidden /> Shop
       </Link>

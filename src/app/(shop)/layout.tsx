@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CartBar } from "@/components/shop/cart-bar";
 import { CartButton } from "@/components/shop/cart-button";
 import { Tracker } from "@/components/shop/tracker";
 
@@ -15,20 +16,36 @@ export default function ShopLayout({ children }: LayoutProps<"/">) {
         </div>
       </header>
       <div className="flex-1">{children}</div>
-      <footer className="mx-auto w-full max-w-5xl px-4 pt-12 pb-[calc(7rem+env(safe-area-inset-bottom))] text-[13px] text-muted">
-        <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-black/[0.08] pt-5">
-          <Link href="/lookup" className="text-link">
-            Check your order
-          </Link>
-          <span>Pre-order only. Delivery every Friday and Saturday.</span>
+      <footer className="mx-auto w-full max-w-5xl px-4 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-center text-[13px] leading-relaxed text-muted">
+        <div className="border-t border-black/[0.08] pt-5">
+          <p>Pre-order only. Delivery every Friday and Saturday.</p>
+          <p>
+            <Link href="/lookup" className="tap inline-flex min-h-11 items-center text-link">
+              Check your order
+            </Link>
+          </p>
+          <p>
+            <Link href="/privacy" className="tap inline-flex min-h-11 items-center text-link">
+              Privacy
+            </Link>
+            {process.env.NEXT_PUBLIC_MESSENGER_URL ? (
+              <>
+                {" · "}
+                <a href={process.env.NEXT_PUBLIC_MESSENGER_URL} target="_blank" rel="noopener noreferrer" className="tap inline-flex min-h-11 items-center text-link">
+                  Message us
+                </a>
+              </>
+            ) : null}
+          </p>
+          <p className="mt-1">
+            Need a system for your business? →{" "}
+            <a href="https://joelbandiola.com" target="_blank" rel="noopener" className="inline-block py-3 text-link">
+              joelbandiola.com
+            </a>
+          </p>
         </div>
-        <p className="mt-5 text-center text-[13px] text-muted">
-          Need a system for your business? →{" "}
-          <a href="https://joelbandiola.com" target="_blank" rel="noopener" className="text-link">
-            joelbandiola.com
-          </a>
-        </p>
       </footer>
+      <CartBar />
     </div>
   );
 }

@@ -18,7 +18,7 @@ select public.track_view('visitor-aaaa1111', '/p/hopia-monggo-x10', 'facebook');
 select public.track_view('visitor-bbbb2222', '/p/hopia-monggo-x10', 'direct');
 select public.track_view('visitor-bbbb2222', '/admin', 'direct');      -- admin pages ignored
 select public.track_view('BAD ID!', '/', 'direct');                    -- invalid id ignored
-select pg_temp.ok((select count(*) from public.page_views) = 0, 'anon cannot read page views');
+select pg_temp.ok(pg_temp.err($q$select count(*) from public.page_views$q$) is not null, 'anon cannot read page views (no privilege)');
 select pg_temp.ok(pg_temp.err($q$select public.admin_dashboard()$q$) = 'forbidden', 'anon cannot read the dashboard');
 reset role;
 select pg_temp.ok((select count(*) from public.page_views) = 3, 'Views recorded, duplicates/admin/invalid ignored');

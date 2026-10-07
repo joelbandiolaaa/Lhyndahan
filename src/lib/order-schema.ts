@@ -14,7 +14,7 @@ export const orderSchema = z.object({
     .transform((v, ctx) => {
       const n = normalizePhone(v);
       if (!n) {
-        ctx.addIssue({ code: "custom", message: "Enter a valid mobile number, e.g. 0917 123 4567." });
+        ctx.addIssue({ code: "custom", message: "Enter a valid mobile number, e.g. 0917 123 4567.", continue: true });
         return z.NEVER;
       }
       return n;

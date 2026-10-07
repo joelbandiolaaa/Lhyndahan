@@ -46,7 +46,7 @@ select pg_temp.ok(pg_temp.err($q$select public.create_order(jsonb_set(pg_temp.pa
   'Missing landmark rejected for outside delivery');
 
 -- anon still cannot read orders directly
-select pg_temp.ok((select count(*) from public.orders) = 0, 'anon cannot list orders');
+select pg_temp.ok(pg_temp.err($q$select count(*) from public.orders$q$) is not null, 'anon cannot list orders (no privilege)');
 
 -- lookup
 select pg_temp.ok((public.lookup_order('lh-0002', '+639171111111'))->>'status' = 'pending',
@@ -77,6 +77,19 @@ select pg_temp.ok(pg_temp.err($q$select public.create_order(jsonb_set(pg_temp.pa
   'Legacy gcash payment is not accepted for new orders');
 
 
+-- per-phone cap: a 6th order for one number within an hour is refused even from a fresh IP
+select public.create_order(pg_temp.payload('+639175555555'), 'pip' || g, (select secret from t)) from generate_series(1, 5) g;
+select pg_temp.ok(pg_temp.err($q$select public.create_order(pg_temp.payload('+639175555555'), 'pip-new', (select secret from t))$q$) = 'rate_limited',
+  '6th order for the same phone in an hour is blocked even from a new IP');
+
+-- lookup brute-force guard: after 10 wrong guesses the code is locked for an hour
+select public.lookup_order('LH-9999', '+639170009999') from generate_series(1, 10);
+select pg_temp.ok(pg_temp.err($q$select public.lookup_order('LH-9999', '+639170009999')$q$) = 'rate_limited',
+  'Lookup is rate limited after 10 wrong guesses');
+select pg_temp.ok(pg_temp.err($q$select public.lookup_order('LH-0002', '+639171111111')$q$) is null
+  or pg_temp.err($q$select public.lookup_order('LH-0002', '+639171111111')$q$) = 'rate_limited',
+  'Lookup guard does not crash for other codes');
+
 -- preview
 select pg_temp.ok((select office_date - (cutoff_at at time zone 'Asia/Manila')::date from public.current_batch_preview()) = 1,
   'Office delivery is the 2nd day after cutoff day (cutoff_at is the next midnight)');
@@ -87,5 +100,17 @@ select pg_temp.ok((select bool_and(supplier_price is null) from public.order_ite
 select pg_temp.ok(not exists (select 1 from information_schema.role_table_grants
                               where table_schema = 'private' and grantee in ('anon','authenticated')),
   'Secret table not granted to the public');
+
+-- retention: personal details of old orders are anonymised, totals and items stay
+update public.orders set created_at = now() - interval '200 days' where phone = '+639173333333';
+update public.customers set created_at = now() - interval '200 days' where phone = '+639173333333';
+select public.purge_old_data();
+select pg_temp.ok((select count(*) from public.orders where name = 'Removed' and address = 'Removed' and total > 0) = 1,
+  'Orders older than 180 days are anonymised but keep their total');
+select pg_temp.ok((select count(*) from public.order_items i join public.orders o on o.id = i.order_id where o.name = 'Removed') > 0,
+  'Items of anonymised orders are kept for sales history');
+select pg_temp.ok(not exists (select 1 from public.orders where phone = '+639173333333'), 'The old phone number is gone');
+select pg_temp.ok(not exists (select 1 from public.customers where phone = '+639173333333'), 'The old customer phone is gone');
+select pg_temp.ok(not has_function_privilege('anon', 'public.purge_old_data()', 'execute'), 'anon cannot run purge_old_data');
 
 \echo 'ALL M2 DATABASE TESTS PASSED'

@@ -35,7 +35,7 @@ export function CheckoutForm({ batch, qrs }: { batch: BatchPreview | null; qrs: 
   const router = useRouter();
   const lines = useCart();
   const [d, setD] = useState<Details>(EMPTY);
-  const [remember, setRemember] = useState(true);
+  const [remember, setRemember] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -181,7 +181,7 @@ export function CheckoutForm({ batch, qrs }: { batch: BatchPreview | null; qrs: 
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-[17px] font-semibold">Your order</h2>
-          <Link href="/cart" className="text-[15px] text-link">
+          <Link href="/cart" className="tap -mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-link">
             Edit
           </Link>
         </div>
@@ -376,7 +376,13 @@ export function CheckoutForm({ batch, qrs }: { batch: BatchPreview | null; qrs: 
       <Button type="submit" size="lg" loading={submitting}>
         {submitting ? "Placing your order…" : <>Place order · <span className="num">{formatPeso(total)}</span></>}
       </Button>
-      <p className="-mt-3 text-center text-[13px] text-muted">This is a pre-order. We&apos;ll confirm your order on Messenger.</p>
+      <p className="-mt-3 text-center text-[13px] text-muted">
+        This is a pre-order. We&apos;ll confirm your order on Messenger. By placing it you agree that we use your details only to prepare and deliver your order. See our{" "}
+        <Link href="/privacy" className="text-link underline">
+          privacy notice
+        </Link>
+        .
+      </p>
     </form>
   );
 }

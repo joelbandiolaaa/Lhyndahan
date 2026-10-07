@@ -36,7 +36,7 @@ export async function GET(req: Request) {
   const batch = sp.get("batch");
   if (batch && /^[0-9a-f-]{36}$/i.test(batch)) query = query.eq("batch_id", batch);
   const status = sp.get("status");
-  if (status && status in STATUS_LABELS) query = query.eq("status", status);
+  if (status && Object.hasOwn(STATUS_LABELS, status)) query = query.eq("status", status);
   if (sp.get("paid") === "paid") query = query.eq("paid", true);
   if (sp.get("paid") === "unpaid") query = query.eq("paid", false);
   const delivery = sp.get("delivery");

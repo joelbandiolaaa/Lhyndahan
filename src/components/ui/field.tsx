@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 const control =
   "w-full rounded-xl bg-surface px-4 text-[17px] text-ink placeholder:text-muted/70 " +
   "border border-line outline-none focus-visible:outline-none transition-[border-color,box-shadow] duration-200 " +
-  "focus:border-accent focus:shadow-[0_0_0_4px_rgba(0,113,227,0.18)] " +
+  "focus:border-accent focus:shadow-[0_0_0_4px_rgba(215,15,100,0.16)] " +
   "aria-[invalid=true]:border-danger aria-[invalid=true]:focus:shadow-[0_0_0_4px_rgba(215,0,21,0.15)]";
 
 type FieldProps = {

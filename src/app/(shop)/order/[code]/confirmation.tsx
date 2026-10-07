@@ -122,7 +122,7 @@ export function Confirmation({ code, qrs }: { code: string; qrs: ConfirmationQr[
 
       <p className="text-center text-[13px] text-muted">
         Save your order number. You can check your order status anytime at{" "}
-        <Link href="/lookup" className="text-link">
+        <Link href="/lookup" className="inline-block py-3 text-link">
           Check order
         </Link>
         .
