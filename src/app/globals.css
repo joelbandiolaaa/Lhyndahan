@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens: the ONLY place colors and type live.
+ * Food-delivery style (foodpanda-like): white surfaces, light grey page,
+ * one bold magenta-pink for actions. Every text pair checked for ≥ 4.5:1.
+ */
+@theme {
+  --color-bg: #f7f7f7;          /* light grey page */
+  --color-surface: #ffffff;     /* cards, sheets */
+  --color-sunken: #efefef;      /* image wells, placeholders */
+  --color-line: #e2e2e2;        /* hairlines, input borders */
+  --color-ink: #333333;         /* primary text      12.6:1 */
+  --color-muted: #707070;       /* secondary text     5.0:1 on white, 4.6:1 on bg */
+  --color-accent: #d70f64;      /* brand pink: buttons, 5.1:1 with white */
+  --color-accent-ink: #ffffff;
+  --color-accent-soft: #fdeef4; /* pink wash for chips/secondary buttons */
+  --color-link: #c20d5a;        /* pink text          6.0:1 on white, 5.4:1 on wash */
+  --color-danger: #d70015;      /* 5.4:1 */
+  --color-success: #1e7b34;     /* 5.2:1 */
+  --color-switch-on: #d70f64;   /* switch fill (not text) */
+  --color-warning: #c93400;     /* 5.3:1 */
+  --color-danger-soft: #fff1f0;
+  --color-success-soft: #eaf7ed;
+  --color-warning-soft: #fff4e5;
+
+  /* San Francisco on iPhone/Mac, Roboto on Android: zero font download,
+     which matters on cheap phones and slow data. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-card: 1.125rem;      /* 18px, Apple card radius */
+  --ease-out-soft: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Apple headline style: semibold, tight tracking */
+.font-display {
+  font-weight: 600;
+  letter-spacing: -0.022em;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Tap feedback without layout shift */
+.tap {
+  touch-action: manipulation;
+  transition: transform 150ms var(--ease-out-soft), opacity 150ms var(--ease-out-soft),
+    background-color 150ms var(--ease-out-soft);
+}
+.tap:active {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Focused/errored fields scroll clear of the sticky header */
+[id^="f-"] {
+  scroll-margin-top: 6rem;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  .tap:active {
+    transform: none;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}

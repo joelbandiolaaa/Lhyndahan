@@ -1,0 +1,33 @@
+-- Product list from the owner (selling prices). Supplier price is left NULL
+-- (not set yet) so no fake profit shows until it is filled in /admin/products.
+insert into public.products (slug, name, bakery, category, description, supplier_price, selling_price, delivery_markup, is_active, sort_order) values
+('hopia-monggo-x10', 'Hopia Monggo x10', 'Ribbonets', 'Hopia / Sweets', '', null, 90, 10, true, 0),
+('hopia-baboy-x10', 'Hopia Baboy x10', 'Ribbonets', 'Hopia / Sweets', '', null, 90, 10, true, 1),
+('hopia-pandan', 'Hopia Pandan', 'Ribbonets', 'Hopia / Sweets', '', null, 90, 10, true, 2),
+('hopia-dahon-sibuyas', 'Hopia Dahon Sibuyas', 'Ribbonets', 'Hopia / Sweets', '', null, 90, 10, true, 3),
+('ube-deleche', 'Ube Deleche', 'Ribbonets', 'Hopia / Sweets', '', null, 110, 10, true, 4),
+('ube-hopia-spl', 'Ube Hopia SPL', 'Ribbonets', 'Hopia / Sweets', '', null, 90, 10, true, 5),
+('ube-regular', 'Ube Regular', 'Ribbonets', 'Hopia / Sweets', '', null, 90, 10, true, 6),
+('yema-hopia', 'Yema Hopia', 'Ribbonets', 'Hopia / Sweets', '', null, 115, 10, true, 7),
+('pastillas-deleche', 'Pastillas Deleche', 'Ribbonets', 'Hopia / Sweets', '', null, 110, 10, true, 8),
+('cookies-cream', 'Cookies & Cream', 'Ribbonets', 'Hopia / Sweets', '', null, 125, 10, true, 9),
+('choco-fudge', 'Choco Fudge', 'Ribbonets', 'Hopia / Sweets', '', null, 115, 10, true, 10),
+('sweet-cassie-ube-spl-hopia', 'Ube SPL Hopia', 'Ribbonets', 'Sweet Cassie', '', null, 90, 10, true, 100),
+('sweet-cassie-ube-regular-hopia', 'Ube Regular Hopia', 'Ribbonets', 'Sweet Cassie', '', null, 90, 10, true, 101),
+('sweet-cassie-mongo-hopia', 'Mongo Hopia', 'Ribbonets', 'Sweet Cassie', '', null, 90, 10, true, 102),
+('sweet-cassie-pastillas-de-yema', 'Pastillas de Yema', 'Ribbonets', 'Sweet Cassie', '', null, 115, 10, true, 103),
+('crinkles-x10', 'Crinkles x10', 'Ribbonets', 'Crinkles', '', null, 60, 10, true, 200),
+('crinkles-x18', 'Crinkles x18', 'Ribbonets', 'Crinkles', '', null, 110, 10, true, 201),
+('crinkles-x20', 'Crinkles x20', 'Ribbonets', 'Crinkles', '', null, 120, 10, true, 202),
+('crinkles-x30', 'Crinkles x30', 'Ribbonets', 'Crinkles', '', null, 80, 10, true, 203),
+('polvoron-big', 'Polvoron Big', 'Ribbonets', 'Polvoron', '', null, 135, 10, true, 300),
+('polvoron-small', 'Polvoron Small', 'Ribbonets', 'Polvoron', '', null, 100, 10, true, 301),
+('polvoron-cookies-cream', 'Polvoron Cookies & Cream', 'Ribbonets', 'Polvoron', '', null, 140, 10, true, 302),
+('cheese-cake-x1', 'Cheese Cake x1', 'Ribbonets', 'Cheesecake', '', null, 15, 10, true, 400),
+('cheese-cake-x2', 'Cheese Cake x2', 'Ribbonets', 'Cheesecake', '', null, 30, 10, true, 401),
+('cheese-cake-x4-cp', 'Cheese Cake x4 CP', 'Ribbonets', 'Cheesecake', '', null, 60, 10, true, 402),
+('cheese-cake-x6', 'Cheese Cake x6', 'Ribbonets', 'Cheesecake', '', null, 90, 10, true, 403),
+('cheese-cake-x8-cp', 'Cheese Cake x8 CP', 'Ribbonets', 'Cheesecake', '', null, 120, 10, true, 404),
+('cheese-bulilit-x6', 'Cheese Bulilit x6', 'Ribbonets', 'Cheese Bulilit', '', null, 35, 10, true, 500),
+('cheese-bulilit-x12', 'Cheese Bulilit x12', 'Ribbonets', 'Cheese Bulilit', '', null, 55, 10, true, 501)
+on conflict (slug) do nothing;
