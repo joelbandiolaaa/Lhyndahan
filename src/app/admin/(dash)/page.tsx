@@ -83,7 +83,8 @@ export default async function AdminHome(props: PageProps<"/admin">) {
   const t = d.traffic;
   const conversion = t.visitors > 0 ? Math.round((t.orders / t.visitors) * 1000) / 10 : 0;
   const deliveryTotal = (d.by_delivery.office ?? 0) + (d.by_delivery.outside ?? 0);
-  const paymentTotal = (d.by_payment.cod ?? 0) + (d.by_payment.gcash ?? 0);
+  const qrCount = (d.by_payment.qr ?? 0) + (d.by_payment.gcash ?? 0);
+  const paymentTotal = (d.by_payment.cod ?? 0) + qrCount;
   const sourceTotal = t.sources.reduce((n, s) => n + s.visitors, 0);
 
   return (
@@ -166,7 +167,7 @@ export default async function AdminHome(props: PageProps<"/admin">) {
             <h2 className="text-[15px] font-semibold">Payment method</h2>
             <ul className="mt-3 flex flex-col gap-3">
               <Bar label="COD" value={d.by_payment.cod ?? 0} total={paymentTotal} />
-              <Bar label="GCash" value={d.by_payment.gcash ?? 0} total={paymentTotal} />
+              <Bar label="QR Code" value={qrCount} total={paymentTotal} />
             </ul>
           </Card>
         </section>

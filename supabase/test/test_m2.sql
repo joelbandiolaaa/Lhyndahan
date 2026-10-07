@@ -14,6 +14,7 @@ begin execute stmt; return null; exception when others then return sqlerrm; end 
 update public.settings set admin_email = 'april@example.com' where id = 1;
 update public.products set is_active = true, deleted_at = null where slug in ('hopia-monggo-x10', 'cheese-cake-x1');
 
+insert into public.payment_qrs (label, image_path) values ('GCash', 'qr/test.png');
 create temp table t as select value as secret from private.app_secrets where key = 'order_api_secret';
 grant select on t to anon;
 
@@ -22,7 +23,7 @@ create or replace function pg_temp.payload(phone text, qty int default 2) return
   select jsonb_build_object(
     'name', 'Juan Dela Cruz', 'phone', phone, 'delivery_type', 'office',
     'address', 'Unit 5, Some Tower, Taguig', 'landmark', 'Tabi ng 7-Eleven',
-    'map_url', 'https://maps.google.com/?q=14.5,121.0', 'payment_method', 'gcash',
+    'map_url', 'https://maps.google.com/?q=14.5,121.0', 'payment_method', 'qr', 'qr_id', (select id from public.payment_qrs limit 1),
     'items', jsonb_build_array(
       jsonb_build_object('product_id', (select id from public.products where slug='hopia-monggo-x10'), 'qty', qty, 'price', 1),
       jsonb_build_object('product_id', (select id from public.products where slug='cheese-cake-x1'), 'qty', 1)))
@@ -41,8 +42,8 @@ select pg_temp.ok(pg_temp.err($q$select public.create_order(pg_temp.payload('091
   'Un-normalized phone rejected');
 select pg_temp.ok(pg_temp.err($q$select public.create_order(pg_temp.payload('+639171111111', 0), 'ip1', (select secret from t))$q$) = 'invalid_qty',
   'Quantity 0 rejected');
-select pg_temp.ok(pg_temp.err($q$select public.create_order(pg_temp.payload('+639171111111') - 'landmark', 'ip1', (select secret from t))$q$) = 'invalid_landmark',
-  'Missing landmark rejected');
+select pg_temp.ok(pg_temp.err($q$select public.create_order(jsonb_set(pg_temp.payload('+639171111111'), '{delivery_type}', '"outside"') - 'landmark', 'ip1', (select secret from t))$q$) = 'invalid_landmark',
+  'Missing landmark rejected for outside delivery');
 
 -- anon still cannot read orders directly
 select pg_temp.ok((select count(*) from public.orders) = 0, 'anon cannot list orders');
@@ -59,6 +60,22 @@ select pg_temp.ok(pg_temp.err($q$select public.create_order(pg_temp.payload('+63
   '6th order in an hour from the same IP is blocked');
 select pg_temp.ok((public.create_order(pg_temp.payload('+639172222222'), 'ip2', (select secret from t))) ? 'code',
   'A different IP can still order');
+
+-- KUS (office) delivery collects no address; QR payment must name an active QR
+select public.create_order(pg_temp.payload('+639173333333'), 'ip3', (select secret from t));
+reset role;
+select pg_temp.ok((select address = 'KUS' and landmark = '' and map_url is null from public.orders where phone = '+639173333333'),
+  'KUS orders ignore any address/landmark/map sent and store KUS');
+select pg_temp.ok((select qr_provider = 'GCash' and qr_id is not null from public.orders where phone = '+639173333333'),
+  'QR order remembers which QR was chosen');
+select pg_temp.ok(((public.lookup_order((select code from public.orders where phone = '+639173333333'), '+639173333333'))->>'qr_provider') = 'GCash',
+  'Lookup returns the chosen QR');
+set role anon;
+select pg_temp.ok(pg_temp.err($q$select public.create_order(pg_temp.payload('+639174444444') - 'qr_id', 'ip3', (select secret from t))$q$) = 'invalid_choice',
+  'QR payment without a QR is rejected');
+select pg_temp.ok(pg_temp.err($q$select public.create_order(jsonb_set(pg_temp.payload('+639174444444'), '{payment_method}', '"gcash"'), 'ip3', (select secret from t))$q$) = 'invalid_choice',
+  'Legacy gcash payment is not accepted for new orders');
+
 
 -- preview
 select pg_temp.ok((select office_date - (cutoff_at at time zone 'Asia/Manila')::date from public.current_batch_preview()) = 1,

@@ -13,6 +13,7 @@ const MESSAGES: Record<string, string> = {
   invalid_address: "Enter your full address.",
   invalid_landmark: "Enter a landmark.",
   invalid_map_url: "The Google Maps link isn't valid.",
+  invalid_choice: "Please choose how you want it delivered and how you'll pay.",
   invalid_qty: "A quantity in your cart isn't valid.",
 };
 

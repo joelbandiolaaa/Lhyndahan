@@ -21,7 +21,7 @@ export type Dashboard = {
   pieces: number;
   by_status: Partial<Record<OrderStatus, number>>;
   by_delivery: Partial<Record<"office" | "outside", number>>;
-  by_payment: Partial<Record<"cod" | "gcash", number>>;
+  by_payment: Partial<Record<"cod" | "qr" | "gcash", number>>;
   top_products: { name: string; qty: number; sales: number }[];
   new_orders: number;
   repeat_customers: number;
@@ -50,7 +50,8 @@ export type AdminOrder = {
   map_url: string | null;
   notes: string | null;
   delivery_date: string;
-  payment_method: "cod" | "gcash";
+  payment_method: "cod" | "qr" | "gcash";
+  qr_provider: string | null;
   status: OrderStatus;
   paid: boolean;
   seen_by_admin: boolean;

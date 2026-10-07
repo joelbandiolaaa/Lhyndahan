@@ -13,7 +13,7 @@ const selectClass =
 const FILTERS = [
   { key: "paid", label: "Payment", options: [["", "Payment: all"], ["unpaid", "Unpaid"], ["paid", "Paid"]] },
   { key: "delivery", label: "Delivery", options: [["", "Delivery: all"], ["office", "KUS (Friday)"], ["outside", "Outside (Saturday)"]] },
-  { key: "pay", label: "Payment method", options: [["", "COD and GCash"], ["cod", "COD"], ["gcash", "GCash"]] },
+  { key: "pay", label: "Payment method", options: [["", "COD and QR"], ["cod", "COD"], ["qr", "QR Code"]] },
 ] as const;
 
 export function OrderFilters({ batches, currentBatchId }: { batches: Batch[]; currentBatchId: string | null }) {

@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { formatDay } from "@/lib/dates";
 import { formatPeso } from "@/lib/money";
+import { paymentLabel } from "@/lib/payment";
 import type { OrderView } from "@/app/(shop)/order/actions";
 
 const STATUS: Record<OrderView["status"], { label: string; tone: string }> = {
@@ -25,11 +26,11 @@ export function OrderSummary({ order }: { order: OrderView }) {
         </dd>
         <dt className="text-muted">Payment</dt>
         <dd>
-          {order.payment_method === "gcash" ? "GCash" : "Cash on Delivery"} ·{" "}
+          {paymentLabel(order.payment_method, order.qr_provider)} ·{" "}
           {order.paid ? (
             <span className="text-success">Paid (confirmed)</span>
-          ) : order.payment_method === "gcash" ? (
-            <span className="text-warning">Waiting for GCash confirmation</span>
+          ) : order.payment_method !== "cod" ? (
+            <span className="text-warning">Waiting for payment confirmation</span>
           ) : (
             <span className="text-muted">Pay on delivery</span>
           )}

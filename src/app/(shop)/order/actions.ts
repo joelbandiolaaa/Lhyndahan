@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { normalizePhone } from "@/lib/phone";
+import type { PaymentMethod } from "@/lib/payment";
 import { supabasePublic } from "@/lib/shop";
 
 export type OrderView = {
@@ -9,7 +10,9 @@ export type OrderView = {
   name: string;
   status: "pending" | "ordered" | "delivered" | "cancelled";
   paid: boolean;
-  payment_method: "cod" | "gcash";
+  payment_method: PaymentMethod;
+  qr_id: string | null;
+  qr_provider: string | null;
   delivery_type: "office" | "outside";
   delivery_date: string;
   total: number;

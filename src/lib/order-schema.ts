@@ -30,13 +30,17 @@ export const orderSchema = z.object({
     .optional()
     .default(""),
   notes: z.string().trim().max(500, "Up to 500 characters only.").optional().default(""),
-  payment_method: z.enum(["cod", "gcash"], { error: "Choose a payment method." }),
+  payment_method: z.enum(["cod", "qr"], { error: "Choose a payment method." }),
+  qr_id: z.string().trim().optional().default(""),
   items: z
     .array(z.object({ product_id: z.uuid(), qty: z.number().int().min(1).max(99) }))
     .min(1, "Your cart is empty.")
     .max(40, "Too many items."),
   website: z.string().max(0).optional().default(""), // honeypot: real people leave it empty
 }).superRefine((v, ctx) => {
+  if (v.payment_method === "qr" && !z.uuid().safeParse(v.qr_id).success) {
+    ctx.addIssue({ code: "custom", path: ["qr_id"], message: "Choose where you'll pay (GCash, Maya, bank...)." });
+  }
   if (v.delivery_type !== "outside") return;
   for (const [key, field] of [["address", addressField], ["landmark", landmarkField]] as const) {
     const r = field.safeParse(v[key]);
@@ -51,5 +55,6 @@ export type OrderResult = {
   total: number;
   delivery_date: string;
   delivery_type: "office" | "outside";
-  payment_method: "cod" | "gcash";
+  payment_method: "cod" | "qr";
+  qr_provider?: string | null;
 };

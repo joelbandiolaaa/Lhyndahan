@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { batchContext, cleanSearch, STATUS_LABELS, type AdminOrder, type Batch } from "@/lib/admin";
 import { formatDateTime, formatDay } from "@/lib/dates";
 import { formatPeso } from "@/lib/money";
+import { paymentShortLabel } from "@/lib/payment";
 import { formatPhone } from "@/lib/phone";
 import { OrderFilters } from "./filters";
 import { MarkSeen } from "./mark-seen";
@@ -40,13 +41,14 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
 
   // Every filter except status; status becomes the tabs (with counts) below.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function applyFilters<T extends { eq: any; or: any }>(qb: T): T {
+  function applyFilters<T extends { eq: any; or: any; in: any }>(qb: T): T {
     let r = qb;
     if (batchParam !== "all" && /^[0-9a-f-]{36}$/i.test(batchParam)) r = r.eq("batch_id", batchParam);
     if (paid === "paid") r = r.eq("paid", true);
     if (paid === "unpaid") r = r.eq("paid", false);
     if (delivery === "office" || delivery === "outside") r = r.eq("delivery_type", delivery);
-    if (pay === "cod" || pay === "gcash") r = r.eq("payment_method", pay);
+    if (pay === "cod") r = r.eq("payment_method", "cod");
+    if (pay === "qr") r = r.in("payment_method", ["qr", "gcash"]);
     if (q) {
       const digits = q.replace(/\D/g, "");
       const parts = [`name.ilike.%${q}%`, `code.ilike.%${q}%`];
@@ -59,7 +61,7 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
   let query = applyFilters(
     supabase
       .from("orders")
-      .select("id, code, name, phone, delivery_type, address, landmark, map_url, notes, delivery_date, payment_method, status, paid, seen_by_admin, total, created_at, batch_id, order_items(id, product_name, qty, selling_price)")
+      .select("id, code, name, phone, delivery_type, address, landmark, map_url, notes, delivery_date, payment_method, qr_provider, status, paid, seen_by_admin, total, created_at, batch_id, order_items(id, product_name, qty, selling_price)")
       .order("created_at", { ascending: false })
       .limit(300),
   );
@@ -155,7 +157,7 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
                 <div className="flex flex-wrap gap-1.5">
                   <span className={`rounded-full px-2.5 py-1 text-[12px] font-medium ${STATUS_TONE[o.status]}`}>{STATUS_LABELS[o.status]}</span>
                   <span className={`rounded-full px-2.5 py-1 text-[12px] font-medium ${o.paid ? "bg-success-soft text-success" : "bg-warning-soft text-warning"}`}>
-                    {o.paid ? "Paid" : "Unpaid"} · {o.payment_method === "gcash" ? "GCash" : "COD"}
+                    {o.paid ? "Paid" : "Unpaid"} · {paymentShortLabel(o.payment_method, o.qr_provider)}
                   </span>
                 </div>
               </div>

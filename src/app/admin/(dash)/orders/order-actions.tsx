@@ -15,7 +15,7 @@ export function OrderActions({
   id: string;
   status: OrderStatus;
   paid: boolean;
-  paymentMethod: "cod" | "gcash";
+  paymentMethod: "cod" | "qr" | "gcash";
 }) {
   const [pending, start] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
@@ -57,7 +57,7 @@ export function OrderActions({
         ) : null}
         {!paid ? (
           <Button variant="secondary" loading={busy === "paid"} disabled={pending} onClick={() => run("paid", () => setOrderPaid(id, true))}>
-            {paymentMethod === "gcash" ? "Mark as Paid (GCash confirmed)" : "Mark as Paid"}
+            {paymentMethod !== "cod" ? "Mark as Paid (payment confirmed)" : "Mark as Paid"}
           </Button>
         ) : (
           <Button variant="ghost" loading={busy === "unpaid"} disabled={pending} onClick={() => run("unpaid", () => setOrderPaid(id, false))}>

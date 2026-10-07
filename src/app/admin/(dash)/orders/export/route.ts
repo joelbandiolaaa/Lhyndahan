@@ -1,4 +1,5 @@
 import { cleanSearch, STATUS_LABELS, type AdminOrder } from "@/lib/admin";
+import { paymentShortLabel } from "@/lib/payment";
 import { formatPhone } from "@/lib/phone";
 import { supabaseServer } from "@/lib/supabase/server";
 
@@ -29,7 +30,7 @@ export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
   let query = supabase
     .from("orders")
-    .select("code, created_at, name, phone, delivery_type, delivery_date, address, landmark, map_url, notes, payment_method, paid, status, total, batch_id, order_items(product_name, qty, selling_price, supplier_price, delivery_markup), batches(code)")
+    .select("code, created_at, name, phone, delivery_type, delivery_date, address, landmark, map_url, notes, payment_method, qr_provider, paid, status, total, batch_id, order_items(product_name, qty, selling_price, supplier_price, delivery_markup), batches(code)")
     .order("created_at", { ascending: true })
     .limit(5000);
   const batch = sp.get("batch");
@@ -41,7 +42,8 @@ export async function GET(req: Request) {
   const delivery = sp.get("delivery");
   if (delivery === "office" || delivery === "outside") query = query.eq("delivery_type", delivery);
   const pay = sp.get("pay");
-  if (pay === "cod" || pay === "gcash") query = query.eq("payment_method", pay);
+  if (pay === "cod") query = query.eq("payment_method", "cod");
+  if (pay === "qr") query = query.in("payment_method", ["qr", "gcash"]);
   const q = cleanSearch(sp.get("q") ?? "");
   if (q) query = query.or(`name.ilike.%${q}%,code.ilike.%${q}%`);
 
@@ -70,7 +72,7 @@ export async function GET(req: Request) {
         o.code, manila(o.created_at), o.batches?.code ?? "", o.name, formatPhone(o.phone),
         o.delivery_type === "office" ? "KUS" : "Outside", o.delivery_date, o.address, o.landmark, o.map_url ?? "",
         o.order_items.map((i) => `${i.qty}x ${i.product_name}`).join("; "), pieces, Number(o.total),
-        o.payment_method === "gcash" ? "GCash" : "COD", o.paid ? "Paid" : "Unpaid", STATUS_LABELS[o.status],
+        paymentShortLabel(o.payment_method, o.qr_provider), o.paid ? "Paid" : "Unpaid", STATUS_LABELS[o.status],
         known ? cost : "", known ? profit : "", o.notes ?? "",
       ].map(cell).join(","),
     );

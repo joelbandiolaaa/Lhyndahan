@@ -1,6 +1,5 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- GCash QR is a small uploaded image */
 import { Building2, Check, LocateFixed, MapPin, NotebookPen, Truck, UserRound, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,22 +21,17 @@ type Details = {
   landmark: string;
   map_url: string;
   notes: string;
-  payment_method: "" | "cod" | "gcash";
+  payment_method: "" | "cod" | "qr";
+  qr_id: string;
 };
 
 const SAVED_KEY = "hopia-details-v1";
 const EMPTY: Details = {
-  name: "", phone: "", delivery_type: "", address: "", landmark: "", map_url: "", notes: "", payment_method: "",
+  name: "", phone: "", delivery_type: "", address: "", landmark: "", map_url: "", notes: "", payment_method: "", qr_id: "",
 };
-const FIELD_ORDER: (keyof Details)[] = ["name", "phone", "delivery_type", "address", "landmark", "map_url", "payment_method", "notes"];
+const FIELD_ORDER: (keyof Details)[] = ["name", "phone", "delivery_type", "address", "landmark", "map_url", "payment_method", "qr_id", "notes"];
 
-export function CheckoutForm({
-  batch,
-  gcash,
-}: {
-  batch: BatchPreview | null;
-  gcash: { qrUrl: string | null; name: string | null; number: string | null };
-}) {
+export function CheckoutForm({ batch, qrs }: { batch: BatchPreview | null; qrs: { id: string; label: string }[] }) {
   const router = useRouter();
   const lines = useCart();
   const [d, setD] = useState<Details>(EMPTY);
@@ -53,11 +47,18 @@ export function CheckoutForm({
   useEffect(() => {
     try {
       const saved = localStorage.getItem(SAVED_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from localStorage
-      if (saved) setD((cur) => ({ ...cur, ...JSON.parse(saved), notes: "" }));
+      if (saved) {
+        const prev = JSON.parse(saved) as Partial<Details>;
+        // A saved choice may no longer exist (QR removed, or an old payment type): drop it.
+        const method = prev.payment_method === "cod" || (prev.payment_method === "qr" && qrs.length > 0) ? prev.payment_method : "";
+        const qr_id = method === "qr" && qrs.some((q) => q.id === prev.qr_id) ? prev.qr_id : "";
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from localStorage
+        setD((cur) => ({ ...cur, ...prev, notes: "", payment_method: method, qr_id: qr_id ?? "" }));
+      }
     } catch {
       /* ignore */
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- restore once on mount; qrs comes from the server render
   }, []);
 
   const set = <K extends keyof Details>(k: K, v: Details[K]) => {
@@ -315,27 +316,33 @@ export function CheckoutForm({
           <div id="f-payment_method" tabIndex={-1} className="grid gap-3 sm:grid-cols-2">
             <Choice name="payment_method" value="cod" checked={d.payment_method === "cod"}
               onChange={() => set("payment_method", "cod")} title="Cash on Delivery" detail="Pay when your order arrives" />
-            <Choice name="payment_method" value="gcash" checked={d.payment_method === "gcash"}
-              onChange={() => set("payment_method", "gcash")} title="GCash" detail="Pay before delivery" />
+            {qrs.length > 0 ? (
+              <Choice name="payment_method" value="qr" checked={d.payment_method === "qr"}
+                onChange={() => set("payment_method", "qr")} title="QR Code payment" detail="GCash, Maya, bank" />
+            ) : null}
           </div>
           {errors.payment_method ? <p role="alert" className="mt-1.5 text-sm text-danger">{errors.payment_method}</p> : null}
         </fieldset>
 
-        {d.payment_method === "gcash" ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl bg-bg p-5 text-center">
-            {gcash.qrUrl ? (
-              <img src={gcash.qrUrl} alt="GCash QR code" className="w-56 max-w-full rounded-xl" />
-            ) : null}
-            {gcash.name || gcash.number ? (
-              <p className="text-[15px]">
-                {gcash.name}
-                {gcash.number ? <span className="num block text-[17px] font-semibold">{gcash.number}</span> : null}
-              </p>
-            ) : null}
-            <p className="text-[15px] text-muted">
-              {gcash.qrUrl || gcash.number
-                ? "Pay the exact total. After placing your order, screenshot your payment and send it to us on Messenger with your order number."
-                : "We'll send you the GCash details on Messenger. After paying, screenshot your payment and send it with your order number."}
+        {d.payment_method === "qr" ? (
+          <div className="flex flex-col gap-3 rounded-xl bg-bg p-4">
+            <p className="text-[15px] font-medium">Where will you pay?</p>
+            <div id="f-qr_id" tabIndex={-1} role="radiogroup" aria-label="Where will you pay?" className="flex flex-wrap gap-2">
+              {qrs.map((q) => (
+                <label key={q.id} className="cursor-pointer">
+                  <input
+                    type="radio" name="qr_id" value={q.id} className="peer sr-only"
+                    checked={d.qr_id === q.id} onChange={() => set("qr_id", q.id)}
+                  />
+                  <span className="tap flex min-h-11 items-center rounded-full border border-line bg-surface px-4 text-[15px] peer-checked:border-accent peer-checked:bg-accent-soft peer-checked:font-semibold peer-checked:text-link peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
+                    {q.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {errors.qr_id ? <p role="alert" className="text-sm text-danger">{errors.qr_id}</p> : null}
+            <p className="text-[14px] text-muted">
+              You&apos;ll see the QR code right after you place your order. Pay the exact total, then send a screenshot of your payment on Messenger with your order number.
             </p>
           </div>
         ) : null}

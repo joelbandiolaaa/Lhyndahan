@@ -25,6 +25,24 @@ export async function getPublicSettings() {
   } | null;
 }
 
+export type PaymentQr = {
+  id: string;
+  label: string;
+  account_name: string | null;
+  account_number: string | null;
+  image_path: string;
+};
+
+/** Active payment QR codes (RLS lets anyone read the active ones). */
+export async function getPaymentQrs(): Promise<PaymentQr[]> {
+  const { data } = await supabasePublic()
+    .from("payment_qrs")
+    .select("id, label, account_name, account_number, image_path")
+    .order("sort_order")
+    .order("created_at");
+  return (data ?? []) as PaymentQr[];
+}
+
 export async function getShopProducts(): Promise<ProductWithImages[]> {
   const { data } = await supabasePublic()
     .from("products")

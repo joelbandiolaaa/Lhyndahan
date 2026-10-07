@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { batchContext, type AdminOrder, type Batch } from "@/lib/admin";
 import { formatDay } from "@/lib/dates";
 import { formatPeso } from "@/lib/money";
+import { paymentShortLabel } from "@/lib/payment";
 import { formatPhone } from "@/lib/phone";
 import { BatchPicker } from "../batch-picker";
 import { PrintButton } from "./print-button";
@@ -12,10 +13,10 @@ export const metadata = { title: "Deliveries" };
 
 type Row = Pick<
   AdminOrder,
-  "id" | "code" | "name" | "phone" | "delivery_type" | "address" | "landmark" | "map_url" | "notes" | "payment_method" | "status" | "paid" | "total" | "created_at" | "order_items"
+  "id" | "code" | "name" | "phone" | "delivery_type" | "address" | "landmark" | "map_url" | "notes" | "payment_method" | "qr_provider" | "status" | "paid" | "total" | "created_at" | "order_items"
 >;
 
-/** What the rider/you must collect at the door. GCash and already-paid orders collect nothing. */
+/** What the rider/you must collect at the door. QR-paid and already-paid orders collect nothing. */
 function amountDue(o: Row) {
   return o.payment_method === "cod" && !o.paid ? o.total : 0;
 }
@@ -42,7 +43,7 @@ function DeliveryCard({ o, n }: { o: Row; n: number }) {
             </>
           ) : (
             <p className="rounded-full bg-success-soft px-3 py-1 text-[13px] font-semibold text-success">
-              {o.paid ? "Paid" : "GCash · not yet confirmed"}
+              {o.paid ? "Paid" : `${paymentShortLabel(o.payment_method, o.qr_provider)} · not yet confirmed`}
             </p>
           )}
         </div>
@@ -136,7 +137,7 @@ export default async function DeliveriesPage(props: PageProps<"/admin/deliveries
 
   const { data } = await supabase
     .from("orders")
-    .select("id, code, name, phone, delivery_type, address, landmark, map_url, notes, payment_method, status, paid, total, created_at, order_items(id, product_name, qty, selling_price)")
+    .select("id, code, name, phone, delivery_type, address, landmark, map_url, notes, payment_method, qr_provider, status, paid, total, created_at, order_items(id, product_name, qty, selling_price)")
     .eq("batch_id", batch.id)
     .neq("status", "cancelled")
     .order("created_at", { ascending: true });
