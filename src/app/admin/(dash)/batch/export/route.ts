@@ -38,7 +38,8 @@ function styleHeader(row: ExcelJS.Row) {
 }
 
 /**
- * GET /admin/batch/export?batch=… → one .xlsx with two tabs:
+ * GET /admin/batch/export?batch=…&type=office|outside → one .xlsx with two tabs (type = one delivery run, i.e. one
+ * supplier order; leave it out for both runs together):
  *   "Supplier order": how many of each product (give this to the supplier; no prices, no customers)
  *   "Per customer":   one row per order (for you: who ordered what, where, and whether it's paid)
  * Cancelled orders are left out of both.
@@ -54,14 +55,19 @@ export async function GET(req: Request) {
   const wanted = new URL(req.url).searchParams.get("batch");
   const batch = batches.find((b) => b.id === wanted) ?? recentlyClosed ?? current ?? lastClosed ?? null;
   if (!batch) return new Response("No batch yet", { status: 404 });
+  const typeParam = new URL(req.url).searchParams.get("type");
+  const type = typeParam === "office" || typeParam === "outside" ? typeParam : null;
+
+  let ordersQuery = supabase
+    .from("orders")
+    .select("code, name, phone, delivery_type, delivery_date, address, landmark, notes, payment_method, qr_provider, paid, status, total, order_items(product_name, qty)")
+    .eq("batch_id", batch.id)
+    .neq("status", "cancelled");
+  if (type) ordersQuery = ordersQuery.eq("delivery_type", type);
 
   const [{ data: summary, error: e1 }, { data: orderData, error: e2 }] = await Promise.all([
-    supabase.rpc("batch_summary", { p_batch_id: batch.id }),
-    supabase
-      .from("orders")
-      .select("code, name, phone, delivery_type, delivery_date, address, landmark, notes, payment_method, qr_provider, paid, status, total, order_items(product_name, qty)")
-      .eq("batch_id", batch.id)
-      .neq("status", "cancelled")
+    supabase.rpc("batch_summary", { p_batch_id: batch.id, p_delivery: type }),
+    ordersQuery
       .order("delivery_type", { ascending: false }) // "office" (KUS) before "outside"
       .order("name", { ascending: true })
       .limit(2000),
@@ -78,7 +84,10 @@ export async function GET(req: Request) {
   // ---- Tab 1: Supplier order ----
   const s1 = wb.addWorksheet("Supplier order", { views: [{ state: "frozen", ySplit: 4 }] });
   s1.columns = [{ width: 44 }, { width: 12 }];
-  s1.getCell("A1").value = `Order for ${formatDay(batch.office_date)} (KUS) and ${formatDay(batch.outside_date)}`;
+  s1.getCell("A1").value =
+    type === "office" ? `Order for ${formatDay(batch.office_date)} (KUS)`
+    : type === "outside" ? `Order for ${formatDay(batch.outside_date)} (My address)`
+    : `Order for ${formatDay(batch.office_date)} (KUS) and ${formatDay(batch.outside_date)}`;
   s1.getCell("A1").font = { bold: true, size: 14 };
   s1.getCell("A2").value = `Batch ${batch.code} · ${orders.length} order${orders.length === 1 ? "" : "s"}`;
   s1.getCell("A2").font = { color: { argb: "FF707070" } };
@@ -156,7 +165,7 @@ export async function GET(req: Request) {
   return new Response(buffer as ArrayBuffer, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="lhyndahan-batch-${batch.code}.xlsx"`,
+      "Content-Disposition": `attachment; filename="lhyndahan-${type === "office" ? "kus-" : type === "outside" ? "address-" : ""}${type === "office" ? batch.office_date : type === "outside" ? batch.outside_date : batch.code}.xlsx"`,
       "Cache-Control": "no-store",
     },
   });

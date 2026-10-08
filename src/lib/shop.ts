@@ -9,7 +9,8 @@ export function supabasePublic() {
   return createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false } });
 }
 
-export type BatchPreview = { code: string; cutoff_at: string; office_date: string; outside_date: string };
+/** cutoff_at = when "My address" orders close; office_cutoff_at = when KUS orders close. Dates are what an order placed now gets. */
+export type BatchPreview = { code: string; cutoff_at: string; office_cutoff_at: string; office_date: string; outside_date: string };
 
 export async function getBatchPreview(): Promise<BatchPreview | null> {
   const { data } = await supabasePublic().rpc("current_batch_preview");

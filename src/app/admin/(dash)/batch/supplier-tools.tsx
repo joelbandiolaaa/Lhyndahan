@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, Notice } from "@/components/ui/card";
 import { markBatchOrdered } from "../orders/actions";
 
-export function SupplierTools({ text, batchId, pendingCount }: { text: string; batchId: string; pendingCount: number }) {
+export function SupplierTools({ text, batchId, delivery, pendingCount, stillOpen }: { text: string; batchId: string; delivery: "office" | "outside"; pendingCount: number; stillOpen: boolean }) {
   const [copied, setCopied] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message?: string } | null>(null);
   const [pending, start] = useTransition();
@@ -43,8 +43,8 @@ export function SupplierTools({ text, batchId, pendingCount }: { text: string; b
         loading={pending}
         disabled={pendingCount === 0}
         onClick={() => {
-          if (!confirm(`Mark ${pendingCount} pending order(s) in this batch as Ordered?`)) return;
-          start(async () => setResult(await markBatchOrdered(batchId)));
+          if (!confirm(`Mark ${pendingCount} pending ${delivery === "office" ? "KUS" : "My address"} order(s) as Ordered?${stillOpen ? "\n\nOrders for this delivery are still open. Orders that come in later will stay Pending." : ""}`)) return;
+          start(async () => setResult(await markBatchOrdered(batchId, delivery)));
         }}
       >
         {pendingCount === 0 ? "No pending orders" : `Mark all as Ordered (${pendingCount})`}

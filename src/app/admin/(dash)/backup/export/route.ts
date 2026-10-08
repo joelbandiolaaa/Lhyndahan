@@ -68,7 +68,7 @@ export async function GET() {
     fetchAll(db, "customers", "id, name, phone, created_at", "created_at"),
     fetchAll(db, "products", "id, name, slug, bakery, category, description, supplier_price, selling_price, delivery_markup, is_active, deleted_at, sort_order, created_at", "sort_order"),
     fetchAll(db, "categories", "id, name, sort_order", "sort_order"),
-    fetchAll(db, "batches", "id, code, starts_at, cutoff_at, office_date, outside_date, supplier_ordered_at", "starts_at"),
+    fetchAll(db, "batches", "id, code, starts_at, office_cutoff_at, cutoff_at, office_date, outside_date, office_supplier_ordered_at, outside_supplier_ordered_at", "starts_at"),
     fetchAll(db, "payment_qrs", "id, label, account_name, account_number, is_active, sort_order", "sort_order"),
   ]);
   // A backup that silently misses a table is worse than none, so fail loudly.
@@ -142,10 +142,12 @@ export async function GET() {
   addSheet(wb, "Batches", [
     { header: "Batch", width: 12, value: s("code") },
     { header: "Opened", width: 17, value: t("starts_at") },
-    { header: "Closes", width: 17, value: t("cutoff_at") },
+    { header: "KUS closes", width: 17, value: t("office_cutoff_at") },
+    { header: "My address closes", width: 17, value: t("cutoff_at") },
     { header: "KUS delivery", width: 14, value: s("office_date") },
     { header: "My address delivery", width: 18, value: s("outside_date") },
-    { header: "Sent to supplier", width: 17, value: t("supplier_ordered_at") },
+    { header: "KUS sent to supplier", width: 19, value: t("office_supplier_ordered_at") },
+    { header: "Address sent to supplier", width: 21, value: t("outside_supplier_ordered_at") },
   ], batches);
 
   addSheet(wb, "Payment QRs", [

@@ -20,6 +20,10 @@ exception when others then
 end $$;
 
 update public.settings set admin_email = 'april@example.com';
+-- The M1-M3 suites test the original single-cutoff schedule (Wed 23:59, KUS Fri / other Sat);
+-- the separate-cutoff schedule has its own suite (test_m4.sql).
+update public.settings set cutoff_dow = 3, cutoff_time = '23:59', office_cutoff_dow = 3, office_cutoff_time = '23:59',
+  office_offset_days = 2, outside_offset_days = 3;
 
 -- ---------------- Batch math (Asia/Manila) ----------------
 -- 2026-10-06 is a Tuesday.
@@ -41,7 +45,7 @@ select pg_temp.ok((select starts_at from public.batches where code='2026-10-14')
   'Batches are contiguous (no gap, no overlap)');
 
 -- Changing cutoff to Tuesday must not touch existing batches or overlap them
-update public.settings set cutoff_dow = 2;
+update public.settings set cutoff_dow = 2, office_cutoff_dow = 2;
 select pg_temp.ok((select code from public.get_or_create_batch('2026-10-10 10:00+08')) = '2026-10-14',
   'Existing batch kept after cutoff setting change');
 select pg_temp.ok((select code from public.get_or_create_batch('2026-10-15 10:00+08')) = '2026-10-20',
@@ -51,7 +55,7 @@ select pg_temp.ok((select starts_at from public.batches where code='2026-10-20')
   'New-rule batch starts exactly where the old one ended');
 select pg_temp.ok((select office_date from public.batches where code='2026-10-20') = '2026-10-22',
   'Delivery offsets follow the cutoff (Tue + 2 = Thu)');
-update public.settings set cutoff_dow = 3;
+update public.settings set cutoff_dow = 3, office_cutoff_dow = 3;
 
 -- ---------------- Order code ----------------
 insert into public.customers (phone, name) values ('+639171234567', 'Test');

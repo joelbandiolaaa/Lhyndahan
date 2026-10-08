@@ -34,7 +34,9 @@ export async function GET(req: Request) {
     .order("created_at", { ascending: true })
     .limit(5000);
   const batch = sp.get("batch");
+  const batchIds = (sp.get("batches") ?? "").split(",").filter((id) => /^[0-9a-f-]{36}$/i.test(id)).slice(0, 10);
   if (batch && /^[0-9a-f-]{36}$/i.test(batch)) query = query.eq("batch_id", batch);
+  else if (batchIds.length) query = query.in("batch_id", batchIds);
   const status = sp.get("status");
   if (status && Object.hasOwn(STATUS_LABELS, status)) query = query.eq("status", status);
   if (sp.get("paid") === "paid") query = query.eq("paid", true);

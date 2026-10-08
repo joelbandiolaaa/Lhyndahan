@@ -2,10 +2,14 @@ export type Batch = {
   id: string;
   code: string;
   starts_at: string;
+  /** When "My address" orders close; also the end of the batch window. */
   cutoff_at: string;
+  /** When KUS orders close (same as or before cutoff_at). */
+  office_cutoff_at: string;
   office_date: string;
   outside_date: string;
-  supplier_ordered_at: string | null;
+  office_supplier_ordered_at: string | null;
+  outside_supplier_ordered_at: string | null;
 };
 
 export type Dashboard = {
@@ -80,6 +84,19 @@ export const SOURCE_LABELS: Record<string, string> = {
 /** "LH-12 / juan / 0917" → safe text for a PostgREST ilike filter (no commas or parentheses). */
 export function cleanSearch(q: string): string {
   return q.replace(/[^\p{L}\p{N}\s+-]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 40);
+}
+
+/** Time helpers kept here so pages don't read the clock directly. */
+export const hasPassed = (iso: string, at: number = Date.now()) => new Date(iso).getTime() <= at;
+
+/** The first of these cutoffs that is still ahead, or null. */
+export function nextCutoff(cutoffs: (string | null)[], at: number = Date.now()): string | null {
+  return cutoffs.find((c): c is string => !!c && new Date(c).getTime() > at) ?? null;
+}
+
+/** Batches that are open, just closed (deliveries still going out) or upcoming. */
+export function activeBatchIds(batches: Batch[], at: number = Date.now()): string[] {
+  return batches.filter((b) => new Date(b.cutoff_at).getTime() > at - 3 * 86_400_000).map((b) => b.id);
 }
 
 /** Which batch is taking orders now, and which one closed most recently. */

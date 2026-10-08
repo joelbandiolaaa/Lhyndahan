@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Card, Notice } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
-import { batchContext, SOURCE_LABELS, type Batch, type Dashboard } from "@/lib/admin";
+import { batchContext, nextCutoff, SOURCE_LABELS, type Batch, type Dashboard } from "@/lib/admin";
 import { formatCutoff, formatDay } from "@/lib/dates";
 import { formatPeso } from "@/lib/money";
 import { getBatchPreview } from "@/lib/shop";
@@ -69,6 +69,9 @@ export default async function AdminHome(props: PageProps<"/admin">) {
   const batches = (batchRows ?? []) as Batch[];
   const { current } = batchContext(batches);
   const cutoffAt = d?.batch?.cutoff_at ?? preview?.cutoff_at ?? null;
+  const officeCutoffAt = d?.batch?.office_cutoff_at ?? preview?.office_cutoff_at ?? null;
+  // Countdown runs to the next cutoff that is still ahead (KUS first, then My address).
+  const upcomingCutoff = nextCutoff([officeCutoffAt, cutoffAt]);
   const isCurrent = !batchId || batchId === current?.id;
 
   if (error || !d) {
@@ -108,16 +111,19 @@ export default async function AdminHome(props: PageProps<"/admin">) {
         <div>
           <p className="text-[13px] text-muted">{isCurrent ? "This week's batch" : "Batch"}</p>
           <p className="text-[17px]">
-            Delivery {formatDay(d.batch?.office_date ?? preview?.office_date ?? "")} and{" "}
-            {formatDay(d.batch?.outside_date ?? preview?.outside_date ?? "", { weekday: false })}
+            KUS {formatDay(d.batch?.office_date ?? preview?.office_date ?? "")}
+            {officeCutoffAt ? <span className="text-[13px] text-muted"> · closes {formatCutoff(officeCutoffAt)}</span> : null}
           </p>
-          {cutoffAt ? <p className="text-[13px] text-muted">Cutoff: {formatCutoff(cutoffAt)}</p> : null}
+          <p className="text-[17px]">
+            My address {formatDay(d.batch?.outside_date ?? preview?.outside_date ?? "")}
+            {cutoffAt ? <span className="text-[13px] text-muted"> · closes {formatCutoff(cutoffAt)}</span> : null}
+          </p>
         </div>
-        {isCurrent && cutoffAt ? (
+        {isCurrent && upcomingCutoff ? (
           <div className="sm:text-right">
-            <p className="text-[13px] text-muted">Time left</p>
+            <p className="text-[13px] text-muted">Next cutoff in</p>
             <p className="text-[26px] leading-tight font-semibold">
-              <Countdown cutoffAt={cutoffAt} />
+              <Countdown cutoffAt={upcomingCutoff} />
             </p>
           </div>
         ) : null}

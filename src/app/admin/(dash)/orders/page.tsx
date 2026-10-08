@@ -2,7 +2,7 @@ import { Download, MapPin, MessageSquareText, Phone } from "lucide-react";
 import Link from "next/link";
 import { Card, EmptyState, Notice } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
-import { batchContext, cleanSearch, STATUS_LABELS, type AdminOrder, type Batch } from "@/lib/admin";
+import { activeBatchIds, batchContext, cleanSearch, STATUS_LABELS, type AdminOrder, type Batch } from "@/lib/admin";
 import { formatDateTime, formatDay } from "@/lib/dates";
 import { formatPeso } from "@/lib/money";
 import { paymentShortLabel } from "@/lib/payment";
@@ -30,9 +30,12 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
 
   const { data: batchRows } = await supabase.from("batches").select("*").order("cutoff_at", { ascending: false }).limit(26);
   const batches = (batchRows ?? []) as Batch[];
+  // "Active" = open batches, the one that just closed (still being delivered) and the next one
+  // (KUS orders placed after the KUS cutoff already sit in next week's batch).
+  const activeIds = activeBatchIds(batches);
   const { current } = batchContext(batches);
 
-  const batchParam = one(sp.batch) ?? current?.id ?? "all";
+  const batchParam = one(sp.batch) ?? "active";
   const status = one(sp.status);
   const paid = one(sp.paid);
   const delivery = one(sp.delivery);
@@ -43,7 +46,8 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function applyFilters<T extends { eq: any; or: any; in: any }>(qb: T): T {
     let r = qb;
-    if (batchParam !== "all" && /^[0-9a-f-]{36}$/i.test(batchParam)) r = r.eq("batch_id", batchParam);
+    if (batchParam === "active") r = r.in("batch_id", activeIds.length ? activeIds : ["00000000-0000-0000-0000-000000000000"]);
+    else if (batchParam !== "all" && /^[0-9a-f-]{36}$/i.test(batchParam)) r = r.eq("batch_id", batchParam);
     if (paid === "paid") r = r.eq("paid", true);
     if (paid === "unpaid") r = r.eq("paid", false);
     if (delivery === "office" || delivery === "outside") r = r.eq("delivery_type", delivery);
@@ -81,7 +85,8 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
   };
 
   const exportParams = new URLSearchParams();
-  if (batchParam !== "all") exportParams.set("batch", batchParam);
+  if (batchParam === "active") exportParams.set("batches", activeIds.join(","));
+  else if (batchParam !== "all") exportParams.set("batch", batchParam);
   for (const [k, v] of Object.entries({ status, paid, delivery, pay, q })) if (v) exportParams.set(k, v);
 
   const { data, error } = await query;

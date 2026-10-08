@@ -74,19 +74,21 @@ export async function markSeen(ids: string[]): Promise<void> {
   revalidatePath("/admin", "layout");
 }
 
-/** Thursday button: every Pending order in the batch becomes Ordered. */
-export async function markBatchOrdered(batchId: string): Promise<ActionResult> {
+/** Every Pending order of one delivery run (KUS or My address) in the batch becomes Ordered. */
+export async function markBatchOrdered(batchId: string, delivery: "office" | "outside"): Promise<ActionResult> {
   const { supabase } = await requireAdmin();
   if (!uuid.safeParse(batchId).success) return { ok: false, message: "Invalid batch." };
+  if (delivery !== "office" && delivery !== "outside") return { ok: false, message: "Invalid delivery type." };
   const now = new Date().toISOString();
   const { data, error } = await supabase
     .from("orders")
     .update({ status: "ordered", ordered_at: now, seen_by_admin: true })
     .eq("batch_id", batchId)
+    .eq("delivery_type", delivery)
     .eq("status", "pending")
     .select("id");
   if (error) return { ok: false, message: "Couldn't update. Please try again." };
-  await supabase.from("batches").update({ supplier_ordered_at: now }).eq("id", batchId);
+  await supabase.from("batches").update(delivery === "office" ? { office_supplier_ordered_at: now } : { outside_supplier_ordered_at: now }).eq("id", batchId);
   refresh();
   return { ok: true, message: `${data?.length ?? 0} order(s) marked as Ordered.` };
 }

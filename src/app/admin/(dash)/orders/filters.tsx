@@ -58,9 +58,10 @@ export function OrderFilters({ batches, currentBatchId }: { batches: Batch[]; cu
         <select
           id="flt-batch"
           className={selectClass}
-          value={params.get("batch") ?? currentBatchId ?? "all"}
+          value={params.get("batch") ?? "active"}
           onChange={(e) => update("batch", e.target.value)}
         >
+          <option value="active">Active batches</option>
           <option value="all">All batches</option>
           {batches.map((b) => (
             <option key={b.id} value={b.id}>

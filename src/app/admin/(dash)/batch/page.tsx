@@ -2,8 +2,8 @@ import { Download } from "lucide-react";
 import { buttonClass } from "@/components/ui/button";
 import { Card, EmptyState, Notice } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
-import { batchContext, type Batch } from "@/lib/admin";
-import { formatDay } from "@/lib/dates";
+import { batchContext, hasPassed, type Batch } from "@/lib/admin";
+import { formatCutoff, formatDay } from "@/lib/dates";
 import { formatPeso } from "@/lib/money";
 import { BatchPicker } from "../batch-picker";
 import { SupplierTools } from "./supplier-tools";
@@ -31,86 +31,109 @@ export default async function BatchPage(props: PageProps<"/admin/batch">) {
     );
   }
 
-  const [{ data: rows }, { count: pendingCount }, { count: orderCount }] = await Promise.all([
-    supabase.rpc("batch_summary", { p_batch_id: batch.id }),
-    supabase.from("orders").select("id", { count: "exact", head: true }).eq("batch_id", batch.id).eq("status", "pending"),
-    supabase.from("orders").select("id", { count: "exact", head: true }).eq("batch_id", batch.id).neq("status", "cancelled"),
-  ]);
-  const items = ((rows ?? []) as Row[]).map((r) => ({ ...r, qty: Number(r.qty) }));
-  const pieces = items.reduce((n, r) => n + r.qty, 0);
-  const knownCost = items.reduce((n, r) => n + Number(r.supplier_cost ?? 0), 0);
-  const missing = items.filter((r) => r.supplier_price === null).length;
-
-  const supplierText = [
-    `Hi! Order for ${formatDay(batch.office_date)}:`,
-    "",
-    ...items.map((r) => `${r.product_name} x ${r.qty}`),
-    "",
-    `Total: ${pieces} pcs`,
-    "Thank you!",
-  ].join("\n");
-
   const isOpen = open(batch);
+  const runs: { type: "office" | "outside"; title: string; date: string; closesAt: string; orderedAt: string | null }[] = [
+    { type: "office", title: "KUS Delivery", date: batch.office_date, closesAt: batch.office_cutoff_at, orderedAt: batch.office_supplier_ordered_at },
+    { type: "outside", title: "My address", date: batch.outside_date, closesAt: batch.cutoff_at, orderedAt: batch.outside_supplier_ordered_at },
+  ];
+  const data = await Promise.all(
+    runs.map(async (r) => {
+      const [{ data: rows }, { count: pendingCount }, { count: orderCount }] = await Promise.all([
+        supabase.rpc("batch_summary", { p_batch_id: batch.id, p_delivery: r.type }),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("batch_id", batch.id).eq("delivery_type", r.type).eq("status", "pending"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("batch_id", batch.id).eq("delivery_type", r.type).neq("status", "cancelled"),
+      ]);
+      return { items: ((rows ?? []) as Row[]).map((x) => ({ ...x, qty: Number(x.qty) })), pendingCount: pendingCount ?? 0, orderCount: orderCount ?? 0 };
+    }),
+  );
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="font-display text-[34px] leading-tight">Batch summary</h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <BatchPicker batches={batches} value={batch.id} currentId={current?.id ?? null} />
-          <a href={`/admin/batch/export?batch=${batch.id}`} className={buttonClass("secondary", "md")}>
-            <Download size={18} aria-hidden /> Download Excel
-          </a>
-        </div>
+        <BatchPicker batches={batches} value={batch.id} currentId={current?.id ?? null} />
       </div>
-      <p className="-mt-2 text-[15px] text-muted">
-        Delivery {formatDay(batch.office_date)} (KUS) and {formatDay(batch.outside_date)} (My address)
-        {isOpen ? " · orders still open, more can be added" : ""}
+      <p className="-mt-3 text-[15px] text-muted">
+        One supplier order per delivery day. {isOpen ? "Orders are still open for this batch." : "This batch is closed."}
       </p>
 
-      {batch.supplier_ordered_at ? <Notice tone="success">This batch has been ordered from the supplier.</Notice> : null}
+      {runs.map((r, i) => {
+        const { items, pendingCount, orderCount } = data[i];
+        const pieces = items.reduce((n, x) => n + x.qty, 0);
+        const knownCost = items.reduce((n, x) => n + Number(x.supplier_cost ?? 0), 0);
+        const missing = items.filter((x) => x.supplier_price === null).length;
+        const closed = hasPassed(r.closesAt);
+        const supplierText = [
+          `Hi! Order for ${formatDay(r.date)}:`,
+          "",
+          ...items.map((x) => `${x.product_name} x ${x.qty}`),
+          "",
+          `Total: ${pieces} pcs`,
+          "Thank you!",
+        ].join("\n");
+        return (
+          <section key={r.type} className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h2 className="font-display text-[24px] leading-tight">
+                  {r.title} · {formatDay(r.date)}
+                </h2>
+                <p className="text-[14px] text-muted">
+                  {closed ? "Closed" : "Orders close"} {formatCutoff(r.closesAt)}
+                  {!closed ? " · more orders can still come in" : ""}
+                </p>
+              </div>
+              <a href={`/admin/batch/export?batch=${batch.id}&type=${r.type}`} className={buttonClass("secondary", "md")}>
+                <Download size={18} aria-hidden /> Download Excel
+              </a>
+            </div>
 
-      {items.length === 0 ? (
-        <EmptyState title="No orders in this batch yet" />
-      ) : (
-        <>
-          <Card className="overflow-hidden">
-            <table className="w-full text-[15px]">
-              <thead>
-                <tr className="text-left text-[13px] text-muted">
-                  <th className="px-4 pt-4 pb-2 font-medium">Product</th>
-                  <th className="px-4 pt-4 pb-2 text-right font-medium">Qty</th>
-                  <th className="px-4 pt-4 pb-2 text-right font-medium">Supplier cost</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/[0.06]">
-                {items.map((r) => (
-                  <tr key={r.product_name}>
-                    <td className="px-4 py-2.5">{r.product_name}</td>
-                    <td className="num px-4 py-2.5 text-right font-semibold">{r.qty}</td>
-                    <td className="num px-4 py-2.5 text-right text-muted">
-                      {r.supplier_cost === null ? <span className="text-warning">—</span> : formatPeso(r.supplier_cost)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="border-t border-black/[0.08] font-semibold">
-                  <td className="px-4 py-3">{orderCount ?? 0} order(s)</td>
-                  <td className="num px-4 py-3 text-right">{pieces}</td>
-                  <td className="num px-4 py-3 text-right">{formatPeso(knownCost)}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </Card>
-          {missing > 0 ? (
-            <p className="-mt-2 text-[13px] text-warning">
-              {missing} product(s) have no supplier price, so the supplier cost is incomplete.
-            </p>
-          ) : null}
-          <SupplierTools text={supplierText} batchId={batch.id} pendingCount={pendingCount ?? 0} />
-        </>
-      )}
+            {r.orderedAt ? <Notice tone="success">Ordered from the supplier.</Notice> : null}
+
+            {items.length === 0 ? (
+              <EmptyState title={`No ${r.title} orders yet`} />
+            ) : (
+              <>
+                <Card className="overflow-hidden">
+                  <table className="w-full text-[15px]">
+                    <thead>
+                      <tr className="text-left text-[13px] text-muted">
+                        <th className="px-4 pt-4 pb-2 font-medium">Product</th>
+                        <th className="px-4 pt-4 pb-2 text-right font-medium">Qty</th>
+                        <th className="px-4 pt-4 pb-2 text-right font-medium">Supplier cost</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/[0.06]">
+                      {items.map((x) => (
+                        <tr key={x.product_name}>
+                          <td className="px-4 py-2.5">{x.product_name}</td>
+                          <td className="num px-4 py-2.5 text-right font-semibold">{x.qty}</td>
+                          <td className="num px-4 py-2.5 text-right text-muted">
+                            {x.supplier_cost === null ? <span className="text-warning">—</span> : formatPeso(x.supplier_cost)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t border-black/[0.08] font-semibold">
+                        <td className="px-4 py-3">{orderCount} order(s)</td>
+                        <td className="num px-4 py-3 text-right">{pieces}</td>
+                        <td className="num px-4 py-3 text-right">{formatPeso(knownCost)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </Card>
+                {missing > 0 ? (
+                  <p className="-mt-1 text-[13px] text-warning">
+                    {missing} product(s) have no supplier price, so the supplier cost is incomplete.
+                  </p>
+                ) : null}
+                <SupplierTools text={supplierText} batchId={batch.id} delivery={r.type} pendingCount={pendingCount} stillOpen={!closed} />
+              </>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }

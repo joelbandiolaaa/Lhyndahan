@@ -27,15 +27,20 @@ export default async function ShopHome() {
         <p className="text-[13px] font-semibold tracking-wide text-link uppercase">This week&apos;s batch</p>
         <p className="mt-1 text-[22px] leading-tight font-semibold md:text-[26px]">Fresh hopia &amp; sweets, pre-order only</p>
         <ul className="mt-3 flex flex-col gap-2 rounded-xl bg-accent-soft px-4 py-3 text-[15px] text-muted">
-          <li className="flex items-center gap-2.5">
-            <Clock size={18} className="shrink-0 text-link" aria-hidden />
+          <li className="flex items-start gap-2.5">
+            <Clock size={18} className="mt-0.5 shrink-0 text-link" aria-hidden />
             {batch ? (
               <span>
-                Order by <span className="font-semibold text-ink">{formatCutoff(batch.cutoff_at)}</span>
+                <span className="font-semibold text-ink">KUS Delivery</span>: order by{" "}
+                <span className="font-semibold text-ink">{formatCutoff(batch.office_cutoff_at)}</span>
+                <br />
+                <span className="font-semibold text-ink">My address</span>: order by{" "}
+                <span className="font-semibold text-ink">{formatCutoff(batch.cutoff_at)}</span>
               </span>
             ) : (
               <span>
-                Order by <span className="font-semibold text-ink">Wednesday, 11:59 PM</span>
+                KUS: order by <span className="font-semibold text-ink">Tuesday, 3:00 PM</span>. My address: order by{" "}
+                <span className="font-semibold text-ink">Wednesday, 3:00 PM</span>
               </span>
             )}
           </li>

@@ -244,9 +244,14 @@ export function CheckoutForm({ batch, qrs }: { batch: BatchPreview | null; qrs: 
           ) : null}
         </fieldset>
         {batch ? (
-          <p className="-mt-1 text-[13px] text-muted">
-            Orders placed until {formatCutoff(batch.cutoff_at)} are included in this batch.
-          </p>
+          <div className="-mt-1 flex flex-col gap-0.5 text-[13px] text-muted">
+            {d.delivery_type !== "outside" ? (
+              <p>KUS orders placed until {formatCutoff(batch.office_cutoff_at)} arrive {formatDay(batch.office_date)}.</p>
+            ) : null}
+            {d.delivery_type !== "office" ? (
+              <p>Address orders placed until {formatCutoff(batch.cutoff_at)} arrive {formatDay(batch.outside_date)}.</p>
+            ) : null}
+          </div>
         ) : null}
 
         {d.delivery_type === "office" ? (

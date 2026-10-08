@@ -137,6 +137,11 @@ delete from public.categories where name = 'Bakes';
 select pg_temp.ok(not exists (select 1 from public.categories where name = 'Bakes'), 'an unused category can be deleted');
 reset role;
 
+-- every order sits in the batch for its delivery type
+select pg_temp.ok(not exists (select 1 from public.orders o
+                              where o.qr_id is not null and o.batch_id <> (select id from public.order_batch(o.delivery_type, o.created_at))),
+  'Orders are filed in the batch that order_batch() picks for their delivery type');
+
 -- retention: personal details of old orders are anonymised, totals and items stay
 update public.orders set created_at = now() - interval '200 days' where phone = '+639173333333';
 update public.customers set created_at = now() - interval '200 days' where phone = '+639173333333';
