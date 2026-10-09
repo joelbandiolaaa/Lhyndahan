@@ -1,7 +1,8 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/env";
+import { SITE_BUCKET, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, publicStorageUrl } from "@/lib/env";
+import { promoHref, type PromoBanner, type PromoSlide } from "@/lib/promos";
 import type { ProductWithImages } from "@/lib/types";
 
 /** Anonymous client for public storefront reads (RLS: active products only). */
@@ -41,6 +42,26 @@ export async function getPaymentQrs(): Promise<PaymentQr[]> {
     .order("sort_order")
     .order("created_at");
   return (data ?? []) as PaymentQr[];
+}
+
+/** Live promo banners (RLS already hides switched-off and out-of-date ones). A failure just means no banners. */
+export async function getPromoSlides(): Promise<PromoSlide[]> {
+  const { data, error } = await supabasePublic()
+    .from("promo_banners")
+    .select("id, badge, headline, subtext, image_path, bg, link_kind, link_value")
+    .order("sort_order")
+    .order("created_at")
+    .limit(8);
+  if (error || !data) return [];
+  return (data as Pick<PromoBanner, "id" | "badge" | "headline" | "subtext" | "image_path" | "bg" | "link_kind" | "link_value">[]).map((b) => ({
+    id: b.id,
+    badge: b.badge,
+    headline: b.headline,
+    subtext: b.subtext,
+    imageUrl: b.image_path ? publicStorageUrl(SITE_BUCKET, b.image_path) : null,
+    bg: b.bg,
+    href: promoHref(b.link_kind, b.link_value),
+  }));
 }
 
 export async function getShopProducts(): Promise<ProductWithImages[]> {

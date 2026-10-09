@@ -3,24 +3,24 @@ import Link from "next/link";
 import { ProductImg } from "@/components/product-image";
 import { AddButton } from "@/components/shop/add-button";
 import { CategoryNav } from "@/components/shop/category-nav";
+import { PromoCarousel } from "@/components/shop/promo-carousel";
 import { EmptyState } from "@/components/ui/card";
 import { formatCutoff, formatDay } from "@/lib/dates";
 import { formatPeso } from "@/lib/money";
-import { getBatchPreview, getCategoryOrder, getShopProducts, groupByCategory, primaryImage } from "@/lib/shop";
+import { slugifyCategory } from "@/lib/promos";
+import { getBatchPreview, getCategoryOrder, getPromoSlides, getShopProducts, groupByCategory, primaryImage } from "@/lib/shop";
 
 // Refresh at least every minute (dates move); admin edits refresh it instantly.
 export const revalidate = 60;
 
-function slugifyCategory(c: string) {
-  return c.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-}
-
 export default async function ShopHome() {
-  const [products, batch, categoryOrder] = await Promise.all([getShopProducts(), getBatchPreview(), getCategoryOrder()]);
+  const [products, batch, categoryOrder, promos] = await Promise.all([getShopProducts(), getBatchPreview(), getCategoryOrder(), getPromoSlides()]);
   const groups = groupByCategory(products, categoryOrder);
 
   return (
     <main className="mx-auto w-full max-w-5xl bg-surface px-4 pb-8 md:my-4 md:rounded-[var(--radius-card)]">
+      <PromoCarousel slides={promos} />
+
       {/* Store header */}
       <section className="pt-5 pb-4">
         <h1 className="sr-only">Lhyndahan</h1>

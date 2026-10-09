@@ -31,3 +31,20 @@ export function formatDateTime(iso: string): string {
     timeZone: TZ,
   }).format(new Date(iso));
 }
+
+/** timestamptz → value for <input type="datetime-local"> in Manila time ("2026-10-10T09:00"), or "". */
+export function toManilaInput(iso: string | null): string {
+  if (!iso) return "";
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(new Date(iso));
+  const g = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
+  return `${g("year")}-${g("month")}-${g("day")}T${g("hour") === "24" ? "00" : g("hour")}:${g("minute")}`;
+}
+
+/** The reverse: a Manila "2026-10-10T09:00" from the form → ISO timestamp, or null when blank/invalid. */
+export function fromManilaInput(value: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
+  const d = new Date(`${value}:00+08:00`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}

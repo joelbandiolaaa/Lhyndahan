@@ -110,3 +110,7 @@ Checks before pushing: `npx tsc --noEmit`, `npx eslint src`, `npm run build`.
 - Orders are created through a security-definer function that needs a server-only secret, validates everything, snapshots prices, and rate-limits to 5 orders per hour per IP.
 - Order lookup needs both the order code and the phone number.
 - The admin area is protected by `src/proxy.ts` and again on every page and server action.
+
+## Promo banners
+
+The sliding cards at the top of the shop are managed in **Admin → Settings → Promo banners** (image and/or text, optional link, optional start/end time, reorder, hide). They slide by themselves, stop when touched, and stay still for people who set "reduce motion". Customers only ever see banners that are switched on and inside their dates (enforced by row-level security). Pictures live in the `site` storage bucket under `banners/`.

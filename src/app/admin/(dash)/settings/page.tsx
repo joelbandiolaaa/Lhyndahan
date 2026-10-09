@@ -1,4 +1,5 @@
-import { Download } from "lucide-react";
+import { ChevronRight, Download, Megaphone } from "lucide-react";
+import Link from "next/link";
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
@@ -28,6 +29,14 @@ export default async function SettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="font-display text-[34px] leading-tight">Settings</h1>
+      <Link href="/admin/promos" className="tap flex items-center gap-4 rounded-[var(--radius-card)] bg-surface p-5 hover:bg-black/[0.03]">
+        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-soft text-link"><Megaphone size={20} aria-hidden /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-[20px]">Promo banners</span>
+          <span className="block text-[15px] text-muted">The sliding cards at the top of the shop: events, reminders, offers.</span>
+        </span>
+        <ChevronRight size={20} className="shrink-0 text-muted" aria-hidden />
+      </Link>
       <PaymentQrSettings qrs={qrs} />
       <Card className="flex flex-col gap-3 p-5">
         <h2 className="font-display text-xl">Backup</h2>

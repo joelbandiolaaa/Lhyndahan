@@ -137,6 +137,29 @@ delete from public.categories where name = 'Bakes';
 select pg_temp.ok(not exists (select 1 from public.categories where name = 'Bakes'), 'an unused category can be deleted');
 reset role;
 
+-- promo banners: customers see only live ones; only the admin can read the rest or change anything
+reset role;
+insert into public.promo_banners (headline, is_active) values ('Live now', true);
+insert into public.promo_banners (headline, is_active) values ('Switched off', false);
+insert into public.promo_banners (headline, ends_at) values ('Expired', now() - interval '1 hour');
+insert into public.promo_banners (headline, starts_at) values ('Not yet', now() + interval '1 day');
+set role anon;
+select pg_temp.ok((select count(*) from public.promo_banners) = 1, 'anon only sees the live promo banner');
+select pg_temp.ok(pg_temp.err($q$insert into public.promo_banners (headline) values ('Hack')$q$) is not null, 'anon cannot add a banner');
+select pg_temp.ok(pg_temp.err($q$delete from public.promo_banners$q$) is not null, 'anon cannot delete banners');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claims', '{"role":"authenticated","email":"april@example.com"}', false);
+select pg_temp.ok((select count(*) from public.promo_banners) = 4, 'admin sees every banner');
+select pg_temp.ok(pg_temp.err($q$insert into public.promo_banners (badge) values ('No content')$q$) is not null, 'a banner needs a headline or an image');
+select pg_temp.ok(pg_temp.err($q$insert into public.promo_banners (headline, image_path) values ('x', '../secret.png')$q$) is not null, 'image path must stay inside banners/');
+select pg_temp.ok(pg_temp.err($q$insert into public.promo_banners (headline, link_kind) values ('x', 'product')$q$) is not null, 'a link needs a target');
+select pg_temp.ok(pg_temp.err($q$insert into public.promo_banners (headline, starts_at, ends_at) values ('x', now(), now() - interval '1 day')$q$) is not null, 'end must be after start');
+select set_config('request.jwt.claims', '{"role":"authenticated","email":"stranger@example.com"}', false);
+select pg_temp.ok((select count(*) from public.promo_banners) = 1, 'a non-admin login only sees the live banner');
+select pg_temp.ok(pg_temp.err($q$update public.promo_banners set headline = 'Hacked'$q$) is null and not exists (select 1 from public.promo_banners where headline = 'Hacked'), 'a non-admin cannot edit banners');
+reset role;
+
 -- retention: personal details of old orders are anonymised, totals and items stay
 update public.orders set created_at = now() - interval '200 days' where phone = '+639173333333';
 update public.customers set created_at = now() - interval '200 days' where phone = '+639173333333';
