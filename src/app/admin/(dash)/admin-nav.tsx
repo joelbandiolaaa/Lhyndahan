@@ -1,5 +1,6 @@
 "use client";
 
+import { LogoMark } from "@/components/logo";
 import { ClipboardList, LayoutGrid, MapPinned, Package, Settings, Truck } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -61,7 +62,10 @@ export function AdminNav({ newOrders = 0 }: { newOrders?: number }) {
 
       {/* Desktop: sidebar */}
       <nav aria-label="Admin" className="no-print fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-black/[0.08] bg-surface/75 px-4 py-6 backdrop-blur-xl md:block">
-        <p className="px-3 font-display text-xl">Lhyndahan <span className="text-link">Admin</span></p>
+        <p className="flex items-center gap-2.5 px-3 font-display text-xl">
+          <LogoMark size={34} tone="black" />
+          <span>Lhyndahan <span className="text-link">Admin</span></span>
+        </p>
         <ul className="mt-8 flex flex-col gap-1">
           {items.map(({ href, label, icon: Icon, exact }) => {
             const active = isActive(href, exact);
