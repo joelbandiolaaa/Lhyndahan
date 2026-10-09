@@ -44,7 +44,7 @@ export function CategoryNav({ categories }: { categories: { id: string; label: s
   if (categories.length < 2) return null;
 
   return (
-    <nav aria-label="Categories" className="sticky top-[calc(4.5rem+env(safe-area-inset-top))] z-20 -mx-4 border-b border-line bg-surface">
+    <nav aria-label="Categories" className="sticky top-[calc(3.75rem+env(safe-area-inset-top))] z-20 -mx-4 border-b border-line bg-surface">
       <div ref={bar} className="flex overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {categories.map((c) => {
           const on = c.id === active;
@@ -58,7 +58,7 @@ export function CategoryNav({ categories }: { categories: { id: string; label: s
                 e.preventDefault();
                 jump(c.id);
               }}
-              className={`relative flex min-h-12 shrink-0 items-center px-3.5 text-[15px] whitespace-nowrap transition-colors ${
+              className={`relative flex min-h-11 shrink-0 items-center px-3.5 text-[15px] whitespace-nowrap transition-colors ${
                 on ? "font-semibold text-link" : "text-muted"
               }`}
             >

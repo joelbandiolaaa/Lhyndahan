@@ -60,7 +60,7 @@ export default async function ShopHome() {
       ) : null}
 
       {groups.map(([category, items], gi) => (
-        <section key={category} id={slugifyCategory(category)} className="scroll-mt-[calc(8.5rem+env(safe-area-inset-top))] pt-6">
+        <section key={category} id={slugifyCategory(category)} className="scroll-mt-[calc(7rem+env(safe-area-inset-top))] pt-6">
           <h2 className="font-display text-[22px] leading-tight">{category}</h2>
           <p className="text-[13px] text-muted">{items.length} {items.length === 1 ? "item" : "items"}</p>
           <ul className="mt-2 grid divide-y divide-line md:grid-cols-2 md:gap-x-8 md:divide-y-0">
