@@ -7,6 +7,8 @@ import { formatPeso } from "@/lib/money";
 import { paymentShortLabel } from "@/lib/payment";
 import { formatPhone } from "@/lib/phone";
 import { BatchPicker } from "../batch-picker";
+import { riderRunText, riderText } from "@/lib/rider";
+import { CopyButton } from "./copy-button";
 import { PrintButton } from "./print-button";
 
 export const metadata = { title: "Deliveries" };
@@ -67,6 +69,9 @@ function DeliveryCard({ o, n }: { o: Row; n: number }) {
               <MapPin size={15} aria-hidden /> Open in Maps <ExternalLink size={13} aria-hidden />
             </a>
           ) : null}
+          <div className="mt-2">
+            <CopyButton text={riderText(o, n)} label="Copy for rider" />
+          </div>
         </div>
       ) : null}
 
@@ -84,11 +89,13 @@ function Group({
   icon,
   date,
   orders,
+  forRider = false,
 }: {
   title: string;
   icon: React.ReactNode;
   date: string;
   orders: Row[];
+  forRider?: boolean;
 }) {
   const due = orders.reduce((n, o) => n + amountDue(o), 0);
   const pieces = orders.reduce((n, o) => n + o.order_items.reduce((m, i) => m + i.qty, 0), 0);
@@ -103,6 +110,9 @@ function Group({
           <span className="num font-semibold text-ink">{formatPeso(due)}</span>
         </p>
       </div>
+      {forRider && orders.length > 0 ? (
+        <CopyButton variant="primary" label={`Copy all ${orders.length} for rider`} text={riderRunText(`${title} · ${formatDay(date)}`, orders)} />
+      ) : null}
       {orders.length === 0 ? (
         <EmptyState title="No deliveries" body="Nothing to deliver for this day in this batch." />
       ) : (
@@ -157,7 +167,7 @@ export default async function DeliveriesPage(props: PageProps<"/admin/deliveries
       <p className="-mt-3 text-[14px] text-muted">Cancelled orders are left out. Amounts to collect only count unpaid COD orders.</p>
 
       <Group title="KUS Delivery" icon={<Building2 size={20} className="text-link" aria-hidden />} date={batch.office_date} orders={kus} />
-      <Group title="My address" icon={<MapPin size={20} className="text-link" aria-hidden />} date={batch.outside_date} orders={outside} />
+      <Group title="My address" icon={<MapPin size={20} className="text-link" aria-hidden />} date={batch.outside_date} orders={outside} forRider />
     </div>
   );
 }
