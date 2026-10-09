@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
     <div className="min-h-dvh pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0 md:pl-60">
       <AdminNav newOrders={newOrders ?? 0} />
-      <header className="no-print sticky top-0 z-20 flex h-14 items-center justify-between bg-accent px-4 text-accent-ink md:px-8">
+      <header className="no-print sticky top-0 z-20 flex h-[4.25rem] items-center justify-between bg-accent px-4 text-accent-ink md:px-8">
         <span className="flex items-center gap-2.5 md:hidden">
           <Wordmark height={30} />
           <span className="text-[13px] font-semibold tracking-wide uppercase text-white/85">Admin</span>

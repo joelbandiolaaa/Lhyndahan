@@ -44,7 +44,7 @@ export function CategoryNav({ categories }: { categories: { id: string; label: s
   if (categories.length < 2) return null;
 
   return (
-    <nav aria-label="Categories" className="sticky top-14 z-20 -mx-4 border-b border-line bg-surface">
+    <nav aria-label="Categories" className="sticky top-[calc(4.5rem+env(safe-area-inset-top))] z-20 -mx-4 border-b border-line bg-surface">
       <div ref={bar} className="flex overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {categories.map((c) => {
           const on = c.id === active;

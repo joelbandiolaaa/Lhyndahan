@@ -20,8 +20,8 @@ export default function ShopLayout({ children }: LayoutProps<"/">) {
     <div className="flex min-h-dvh flex-col">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ORG_JSON_LD }} />
       <Tracker />
-      <header className="sticky top-0 z-30 bg-accent text-accent-ink">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
+      <header className="sticky top-0 z-30 bg-accent pt-[env(safe-area-inset-top)] text-accent-ink">
+        <div className="mx-auto flex h-[4.5rem] w-full max-w-5xl items-center justify-between px-4">
           <Link href="/" aria-label="Lhyndahan home" className="tap -ml-1 flex min-h-11 items-center px-1">
             <Wordmark height={34} />
           </Link>
