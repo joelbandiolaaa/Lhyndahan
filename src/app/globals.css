@@ -3,7 +3,7 @@
 /*
  * Design tokens: the ONLY place colors and type live.
  * Food-delivery style (foodpanda-like): white surfaces, light grey page,
- * one bold magenta-pink for actions. Every text pair checked for ≥ 4.5:1.
+ * one bold red-pink (the logo colour, darkened to pass contrast) for actions. Every text pair checked for ≥ 4.5:1.
  */
 @theme {
   --color-bg: #f7f7f7;          /* light grey page */
@@ -11,14 +11,14 @@
   --color-sunken: #efefef;      /* image wells, placeholders */
   --color-line: #e2e2e2;        /* hairlines, input borders */
   --color-ink: #333333;         /* primary text      12.6:1 */
-  --color-muted: #707070;       /* secondary text     5.0:1 on white, 4.6:1 on bg */
-  --color-accent: #d70f64;      /* brand pink: buttons, 5.1:1 with white */
+  --color-muted: #6b6b6b;       /* secondary text     5.3:1 on white, 5.0:1 on bg, 4.8:1 on the accent wash */
+  --color-accent: #e9082f;      /* logo red (#f8264b) darkened just enough: buttons, 4.6:1 with white */
   --color-accent-ink: #ffffff;
-  --color-accent-soft: #fdeef4; /* pink wash for chips/secondary buttons */
-  --color-link: #c20d5a;        /* pink text          6.0:1 on white, 5.4:1 on wash */
-  --color-danger: #d70015;      /* 5.4:1 */
+  --color-accent-soft: #feeff2; /* red wash for chips/secondary buttons */
+  --color-link: #d2072b;        /* red text           5.5:1 on white, 4.9:1 on wash */
+  --color-danger: #a8071a;      /* 7.8:1; darker than the brand red so errors/deletes still stand apart */
   --color-success: #1e7b34;     /* 5.2:1 */
-  --color-switch-on: #d70f64;   /* switch fill (not text) */
+  --color-switch-on: #e9082f;   /* switch fill (not text) */
   --color-warning: #c93400;     /* 5.3:1 */
   --color-danger-soft: #fff1f0;
   --color-success-soft: #eaf7ed;

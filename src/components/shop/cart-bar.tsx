@@ -31,7 +31,7 @@ export function CartBar() {
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <Link
           href="/cart"
-          className="tap pointer-events-auto mx-auto flex min-h-14 max-w-xl items-center gap-3 rounded-xl bg-accent px-4 text-accent-ink shadow-[0_6px_20px_rgba(215,15,100,0.35)]"
+          className="tap pointer-events-auto mx-auto flex min-h-14 max-w-xl items-center gap-3 rounded-xl bg-accent px-4 text-accent-ink shadow-[0_6px_20px_rgba(233,8,47,0.35)]"
         >
           <span className="num flex size-7 items-center justify-center rounded-full border-2 border-white/80 text-[14px] font-semibold">
             {count}

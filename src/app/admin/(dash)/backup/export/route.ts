@@ -5,7 +5,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const PINK = "FFD70F64";
+const PINK = "FFE9082F";
 const PESO = '"₱"#,##0.00';
 const PAGE = 1000;
 

@@ -44,7 +44,7 @@ export function AdminNav({ newOrders = 0 }: { newOrders?: number }) {
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={`tap flex min-h-16 flex-col items-center justify-center gap-1 text-xs ${
-                    active ? "font-semibold text-accent" : "text-muted"
+                    active ? "font-semibold text-link" : "text-muted"
                   }`}
                 >
                   <span className="relative">
