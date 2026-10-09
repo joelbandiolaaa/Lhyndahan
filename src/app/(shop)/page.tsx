@@ -35,7 +35,7 @@ export default async function ShopHome() {
               </span>
             ) : (
               <span>
-                Order by <span className="font-semibold text-ink">Wednesday, 11:59 PM</span>
+                Order by <span className="font-semibold text-ink">Wednesday, 6:00 AM</span>
               </span>
             )}
           </li>

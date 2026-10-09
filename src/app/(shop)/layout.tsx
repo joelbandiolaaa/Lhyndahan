@@ -32,6 +32,7 @@ export default function ShopLayout({ children }: LayoutProps<"/">) {
       <footer className="mx-auto w-full max-w-5xl px-4 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-center text-[13px] leading-relaxed text-muted">
         <div className="border-t border-black/[0.08] pt-5">
           <p>Pre-order only. Delivery every Friday and Saturday.</p>
+          <p>Orders close every Wednesday at 6:00 AM. Later orders go to the next batch.</p>
           <p>
             <Link href="/lookup" className="tap inline-flex min-h-11 items-center text-link">
               Check your order

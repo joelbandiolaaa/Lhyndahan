@@ -86,7 +86,8 @@ export function cleanSearch(q: string): string {
 export function batchContext(batches: Batch[], at: number = Date.now()) {
   const current = batches.find((b) => new Date(b.starts_at).getTime() <= at && at < new Date(b.cutoff_at).getTime()) ?? null;
   const lastClosed = batches.find((b) => new Date(b.cutoff_at).getTime() <= at) ?? null;
+  // Wed 6 AM cutoff → Fri pickup, Fri/Sat delivery: the closed batch must stay "the one that matters" until Sunday morning.
   // Thu–Sat after a cutoff the batch that matters (supplier order, deliveries) is the one that just closed.
-  const recentlyClosed = lastClosed && at - new Date(lastClosed.cutoff_at).getTime() < 3 * 86_400_000 ? lastClosed : null;
+  const recentlyClosed = lastClosed && at - new Date(lastClosed.cutoff_at).getTime() < 4 * 86_400_000 ? lastClosed : null;
   return { current, lastClosed, recentlyClosed, isOpen: (b: Batch) => new Date(b.cutoff_at).getTime() > at };
 }

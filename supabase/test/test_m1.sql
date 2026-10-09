@@ -20,6 +20,8 @@ exception when others then
 end $$;
 
 update public.settings set admin_email = 'april@example.com';
+-- M1-M3 test the original schedule (Wed 23:59); the live one (Wed 6 AM) is checked in test_m4.sql.
+update public.settings set cutoff_dow = 3, cutoff_time = '23:59', office_offset_days = 2, outside_offset_days = 3;
 
 -- ---------------- Batch math (Asia/Manila) ----------------
 -- 2026-10-06 is a Tuesday.

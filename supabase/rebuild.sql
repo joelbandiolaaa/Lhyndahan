@@ -1280,6 +1280,18 @@ revoke all on public.promo_banners from anon, authenticated;
 grant select on public.promo_banners to anon, authenticated;
 grant insert, update, delete on public.promo_banners to authenticated;
 
+-- ===== migrations/0017_cutoff_wednesday_6am.sql =====
+-- Shop schedule: one cutoff for all products and both deliveries.
+--   Wednesday 6:00 AM  orders close and the order goes to the supplier
+--   Friday    6:00 AM  pickup
+--   Friday = KUS delivery, Saturday = "My address" delivery
+update public.settings set cutoff_dow = 3, cutoff_time = '06:00', office_offset_days = 2, outside_offset_days = 3 where id = 1;
+
+-- A batch that is still open follows the new cutoff (its code is its cutoff date).
+update public.batches
+   set cutoff_at = ((code::date + time '06:00') + interval '1 minute') at time zone 'Asia/Manila'
+ where cutoff_at > now();
+
 -- ===== seed.sql =====
 -- Product list from the owner (selling prices). Supplier price is left NULL
 -- (not set yet) so no fake profit shows until it is filled in /admin/products.

@@ -16,7 +16,7 @@ export default function OpengraphImage() {
         <img src={WORDMARK_DATA_URL} width={560} height={191} alt="" style={{ marginTop: 8, flexShrink: 0 }} />
         <div style={{ fontSize: 40, marginTop: 16, opacity: 0.95 }}>Hopia, crinkles, polvoron &amp; more</div>
         <div style={{ fontSize: 32, marginTop: 36, background: "#fff", color: "#e9082f", padding: "14px 28px", borderRadius: 999, alignSelf: "flex-start" }}>
-          Order by Wednesday · Delivery Fri &amp; Sat
+          Order by Wednesday 6 AM · Delivery Fri &amp; Sat
         </div>
       </div>
     ),
