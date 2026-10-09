@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     siteName: "Lhyndahan",
     locale: "en_PH",
     title: "Lhyndahan — Hopia & sweets pre-order",
-    description: "Pre-order hopia, crinkles, polvoron and more. Order by Wednesday 6 AM, delivery Friday and Saturday.",
+    description: "Pre-order hopia, crinkles, polvoron and more. Order cutoff Wednesday 6 AM, delivery Friday and Saturday.",
   },
   twitter: { card: "summary_large_image" },
 };

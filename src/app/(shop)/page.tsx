@@ -31,11 +31,11 @@ export default async function ShopHome() {
             <Clock size={18} className="shrink-0 text-link" aria-hidden />
             {batch ? (
               <span>
-                Order by <span className="font-semibold text-ink">{formatCutoff(batch.cutoff_at)}</span>
+                Order cutoff: <span className="font-semibold text-ink">{formatCutoff(batch.cutoff_at)}</span>
               </span>
             ) : (
               <span>
-                Order by <span className="font-semibold text-ink">Wednesday, 6:00 AM</span>
+                Order cutoff: <span className="font-semibold text-ink">Wednesday, 6:00 AM</span>
               </span>
             )}
           </li>
