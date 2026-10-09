@@ -1,4 +1,4 @@
-import { Wordmark } from "@/components/logo";
+import { LogoMark, Wordmark } from "@/components/logo";
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
 import { AdminNav } from "./admin-nav";
@@ -18,7 +18,8 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       <AdminNav newOrders={newOrders ?? 0} />
       <header className="no-print sticky top-0 z-20 flex h-14 items-center justify-between bg-accent px-4 text-accent-ink md:px-8">
         <span className="flex items-center gap-2.5 md:hidden">
-          <Wordmark height={30} />
+          <LogoMark size={32} />
+          <Wordmark height={26} />
           <span className="text-[13px] font-semibold tracking-wide uppercase text-white/85">Admin</span>
         </span>
         <span className="hidden text-sm text-white/85 md:block">{email}</span>
