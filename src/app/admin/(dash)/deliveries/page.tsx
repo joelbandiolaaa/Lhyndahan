@@ -8,7 +8,7 @@ import { paymentShortLabel } from "@/lib/payment";
 import { formatPhone } from "@/lib/phone";
 import { BatchPicker } from "../batch-picker";
 import { riderRunText, riderText } from "@/lib/rider";
-import { CopyButton } from "./copy-button";
+import { RiderActions } from "./copy-button";
 import { PrintButton } from "./print-button";
 
 export const metadata = { title: "Deliveries" };
@@ -70,7 +70,7 @@ function DeliveryCard({ o, n }: { o: Row; n: number }) {
             </a>
           ) : null}
           <div className="mt-2">
-            <CopyButton text={riderText(o, n)} label="Copy for rider" />
+            <RiderActions text={riderText(o, n)} copyLabel="Copy for rider" />
           </div>
         </div>
       ) : null}
@@ -111,7 +111,7 @@ function Group({
         </p>
       </div>
       {forRider && orders.length > 0 ? (
-        <CopyButton variant="primary" label={`Copy all ${orders.length} for rider`} text={riderRunText(`${title} · ${formatDay(date)}`, orders)} />
+        <RiderActions variant="primary" copyLabel={`Copy all ${orders.length} for rider`} text={riderRunText(`${title} · ${formatDay(date)}`, orders)} />
       ) : null}
       {orders.length === 0 ? (
         <EmptyState title="No deliveries" body="Nothing to deliver for this day in this batch." />
