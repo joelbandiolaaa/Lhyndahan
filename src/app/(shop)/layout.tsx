@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CartBar } from "@/components/shop/cart-bar";
 import { CartButton } from "@/components/shop/cart-button";
-import { LogoMark } from "@/components/logo";
+import { Wordmark } from "@/components/logo";
 import { Tracker } from "@/components/shop/tracker";
 
 export default function ShopLayout({ children }: LayoutProps<"/">) {
@@ -10,9 +10,8 @@ export default function ShopLayout({ children }: LayoutProps<"/">) {
       <Tracker />
       <header className="sticky top-0 z-30 bg-accent text-accent-ink">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
-          <Link href="/" className="tap -ml-1 flex min-h-11 items-center gap-2.5 px-1 font-display text-[19px] text-accent-ink">
-            <LogoMark size={36} />
-            Lhyndahan
+          <Link href="/" aria-label="Lhyndahan home" className="tap -ml-1 flex min-h-11 items-center px-1">
+            <Wordmark height={34} />
           </Link>
           <CartButton />
         </div>
