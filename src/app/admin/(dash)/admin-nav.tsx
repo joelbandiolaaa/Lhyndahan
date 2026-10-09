@@ -1,6 +1,6 @@
 "use client";
 
-import { LogoMark, Wordmark } from "@/components/logo";
+import { Wordmark } from "@/components/logo";
 import { ClipboardList, LayoutGrid, MapPinned, Package, Settings, Truck } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -63,10 +63,7 @@ export function AdminNav({ newOrders = 0 }: { newOrders?: number }) {
       {/* Desktop: sidebar */}
       <nav aria-label="Admin" className="no-print fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-black/[0.08] bg-surface/75 px-4 py-6 backdrop-blur-xl md:block">
         <div className="px-3">
-          <p className="flex items-center gap-2">
-            <LogoMark size={34} tone="black" />
-            <Wordmark height={28} tone="black" />
-          </p>
+          <Wordmark height={34} tone="black" />
           <p className="mt-1 text-[12px] font-semibold tracking-wide text-link uppercase">Admin</p>
         </div>
         <ul className="mt-8 flex flex-col gap-1">

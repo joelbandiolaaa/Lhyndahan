@@ -1,13 +1,16 @@
 import Image from "next/image";
 
-/** The Lhyndahan "L" mark, one colour: white on the pink bars, black on light backgrounds. */
+const MARK_RATIO = 628 / 512;
+const WORDMARK_RATIO = 720 / 246;
+
+/** The Lhyndahan "L" cart mark, one colour: white on the red bars, black on light backgrounds. `size` is its height. */
 export function LogoMark({ size = 36, tone = "white", className = "" }: { size?: number; tone?: "white" | "black"; className?: string }) {
   return (
     <Image
-      src={tone === "white" ? "/logo-white.png" : "/logo-black.png"}
+      src={tone === "white" ? "/mark-white.png" : "/mark-black.png"}
       alt=""
       aria-hidden
-      width={size}
+      width={Math.round(size * MARK_RATIO)}
       height={size}
       priority
       className={`shrink-0 ${className}`}
@@ -15,9 +18,7 @@ export function LogoMark({ size = 36, tone = "white", className = "" }: { size?:
   );
 }
 
-const WORDMARK_RATIO = 720 / 246;
-
-/** The hand-lettered "Lhyndahan" name. Pass the visible text alongside it elsewhere (this is decorative). */
+/** The hand-lettered "Lhyndahan" name. */
 export function Wordmark({ height = 30, tone = "white", className = "" }: { height?: number; tone?: "white" | "black"; className?: string }) {
   return (
     <Image

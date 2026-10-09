@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CartBar } from "@/components/shop/cart-bar";
 import { CartButton } from "@/components/shop/cart-button";
-import { LogoMark, Wordmark } from "@/components/logo";
+import { Wordmark } from "@/components/logo";
 import { Tracker } from "@/components/shop/tracker";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://lhyndahan.vercel.app";
@@ -23,8 +23,7 @@ export default function ShopLayout({ children }: LayoutProps<"/">) {
       <header className="sticky top-0 z-30 bg-accent text-accent-ink">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
           <Link href="/" aria-label="Lhyndahan home" className="tap -ml-1 flex min-h-11 items-center px-1">
-            <LogoMark size={38} />
-            <Wordmark height={30} className="ml-2" />
+            <Wordmark height={34} />
           </Link>
           <CartButton />
         </div>

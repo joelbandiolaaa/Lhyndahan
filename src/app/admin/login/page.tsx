@@ -1,4 +1,4 @@
-import { LogoMark, Wordmark } from "@/components/logo";
+import { Wordmark } from "@/components/logo";
 import type { Metadata } from "next";
 import { LoginForm } from "./login-form";
 
@@ -10,10 +10,7 @@ export default async function LoginPage(props: PageProps<"/admin/login">) {
     <main className="flex min-h-dvh flex-col">
       <div className="bg-accent px-6 pt-16 pb-12 text-accent-ink">
         <div className="mx-auto w-full max-w-sm">
-          <div className="mb-3 flex items-center gap-3">
-            <LogoMark size={56} />
-            <Wordmark height={52} />
-          </div>
+          <Wordmark height={64} className="mb-3" />
           <p className="text-[13px] font-semibold tracking-wide text-white/85 uppercase">Admin</p>
           <h1 className="mt-1 font-display text-[34px] leading-tight">Log in</h1>
           <p className="mt-1 text-white/85">For the store owner only.</p>

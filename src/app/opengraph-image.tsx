@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { LOGO_DATA_URL, WORDMARK_DATA_URL } from "@/lib/logo-data";
+import { LOGO_ASPECT, LOGO_DATA_URL, WORDMARK_DATA_URL } from "@/lib/logo-data";
 
 export const alt = "Lhyndahan — pre-order hopia & sweets";
 export const size = { width: 1200, height: 630 };
@@ -10,7 +10,7 @@ export default function OpengraphImage() {
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", padding: 56, background: "#e9082f", color: "#fff" }}>
         <div style={{ display: "flex", alignItems: "center" }}>
-          <img src={LOGO_DATA_URL} width={92} height={92} alt="" style={{ flexShrink: 0 }} />
+          <img src={LOGO_DATA_URL} width={Math.round(92 * LOGO_ASPECT)} height={92} alt="" style={{ flexShrink: 0 }} />
           <div style={{ fontSize: 28, letterSpacing: 4, opacity: 0.9, marginLeft: 24 }}>PRE-ORDER</div>
         </div>
         <img src={WORDMARK_DATA_URL} width={560} height={191} alt="" style={{ marginTop: 8, flexShrink: 0 }} />
