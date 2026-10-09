@@ -74,7 +74,7 @@ export function PromoCarousel({ slides }: { slides: PromoSlide[] }) {
         onBlur={() => release()}
         onTouchStart={hold}
         onTouchEnd={() => release(6000)}
-        className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto scroll-smooth px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {slides.map((s, i) => (
           <div
