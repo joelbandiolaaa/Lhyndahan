@@ -114,11 +114,12 @@ function PromoForm({ row, options, onDone }: { row?: PromoRow; options: Options;
         <PromoCard slide={slide} />
       </div>
 
-      <div className="flex flex-col items-start gap-2">
+      <div className="flex flex-col items-start gap-2 rounded-xl border border-dashed border-line p-4">
+        <p className="text-[15px] font-medium">Background picture</p>
         <input ref={fileInput} type="file" accept="image/*" className="sr-only" onChange={(e) => choose(e.target.files?.[0])} />
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" onClick={() => fileInput.current?.click()}>
-            <ImagePlus size={18} aria-hidden /> {currentImage ? "Change picture" : "Add a picture"}
+            <ImagePlus size={18} aria-hidden /> {currentImage ? "Change picture" : "Upload background picture"}
           </Button>
           {currentImage ? (
             <Button type="button" variant="secondary" onClick={() => { choose(undefined); setRemoveImage(true); if (fileInput.current) fileInput.current.value = ""; }}>
@@ -126,7 +127,7 @@ function PromoForm({ row, options, onDone }: { row?: PromoRow; options: Options;
             </Button>
           ) : null}
         </div>
-        <p className="text-[13px] text-muted">Optional. Best size: wide, about 1200 × 600 (2:1). Keep the words short so they stay readable on a phone.</p>
+        <p className="text-[13px] text-muted">Optional. The picture fills the whole card. Best size: wide, about 1200 × 600 (2:1). <strong>Leave the words below blank</strong> to show your picture as it is (for a finished design). Add words and they appear on top of the picture.</p>
       </div>
 
       <Field label="Small label" name={`badge-${row?.id ?? "new"}`} error={errors.badge} hint="Optional, e.g. 10.10 or PAYDAY (max 24).">
