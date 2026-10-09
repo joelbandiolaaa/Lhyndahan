@@ -23,7 +23,7 @@ export default function ShopLayout({ children }: LayoutProps<"/">) {
       <header className="sticky top-0 z-30 bg-accent pt-[env(safe-area-inset-top)] text-accent-ink">
         <div className="mx-auto flex h-[4.5rem] w-full max-w-5xl items-center justify-between px-4">
           <Link href="/" aria-label="Lhyndahan home" className="tap -ml-1 flex min-h-11 items-center px-1">
-            <Wordmark height={34} />
+            <Wordmark height={34} className="translate-y-1" />
           </Link>
           <CartButton />
         </div>
