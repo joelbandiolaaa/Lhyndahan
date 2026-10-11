@@ -68,8 +68,15 @@ export async function changeEmail(_prev: AccountState, formData: FormData): Prom
   if (!userId) return { ok: false, message: "Please log in again." };
 
   const svc = supabaseService();
-  const { data: settings } = await svc.from("settings").select("notify_email").eq("id", 1).single();
+  const { data: settings } = await svc.from("settings").select("notify_email, admin_email").eq("id", 1).single();
+  const isOwner = (settings?.admin_email ?? "").toLowerCase() === oldEmail.toLowerCase();
   const notify = settings?.notify_email?.toLowerCase() === oldEmail.toLowerCase() ? newEmail : (settings?.notify_email ?? null);
+  if (!isOwner) {
+    // An extra admin may only change their own login, never the owner's.
+    if ((settings?.admin_email ?? "").toLowerCase() === newEmail) return { ok: false, message: "That email belongs to the owner." };
+    const { data: taken } = await svc.from("admin_users").select("email").eq("email", newEmail).maybeSingle();
+    if (taken) return { ok: false, message: "That email is already an admin." };
+  }
 
   const { error: authError } = await svc.auth.admin.updateUserById(userId, { email: newEmail, email_confirm: true });
   if (authError) {
@@ -78,7 +85,9 @@ export async function changeEmail(_prev: AccountState, formData: FormData): Prom
       message: authError.code === "email_exists" ? "That email is already used by another account." : "Couldn't change the email. Please try again.",
     };
   }
-  const { error: settingsError } = await svc.from("settings").update({ admin_email: newEmail, notify_email: notify }).eq("id", 1);
+  const { error: settingsError } = isOwner
+    ? await svc.from("settings").update({ admin_email: newEmail, notify_email: notify }).eq("id", 1)
+    : await svc.from("admin_users").update({ email: newEmail }).eq("email", oldEmail.toLowerCase());
   if (settingsError) {
     const { error: revertError } = await svc.auth.admin.updateUserById(userId, { email: oldEmail, email_confirm: true });
     if (revertError) {

@@ -114,3 +114,7 @@ Checks before pushing: `npx tsc --noEmit`, `npx eslint src`, `npm run build`.
 ## Promo banners
 
 The sliding cards at the top of the shop are managed in **Admin → Settings → Promo banners** (image and/or text, optional link, optional start/end time, reorder, hide). They slide by themselves, stop when touched, and stay still for people who set "reduce motion". Customers only ever see banners that are switched on and inside their dates (enforced by row-level security). Pictures live in the `site` storage bucket under `banners/`.
+
+## Admin logins
+
+The owner is `settings.admin_email` (changeable only in the SQL editor). Extra admins (e.g. a spouse) are added by the owner in **Admin → Settings → Admin logins**: each gets their own email and password, can do everything except add/remove people, and loses access the moment they are removed (the database checks `admin_users` on every request). Passwords are never stored by the app; a generated temporary password is shown once.

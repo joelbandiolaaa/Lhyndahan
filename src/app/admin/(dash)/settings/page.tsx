@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import { SITE_BUCKET, publicStorageUrl } from "@/lib/env";
 import { EmailForm } from "../account/email-form";
 import { PasswordForm } from "../account/password-form";
+import { AdminUsers } from "./admin-users";
 import { PaymentQrSettings, type QrRow } from "./payment-qr-settings";
 
 export const metadata = { title: "Settings" };
@@ -17,6 +18,10 @@ export default async function SettingsPage() {
     .select("id, label, account_name, account_number, image_path, is_active")
     .order("sort_order")
     .order("created_at");
+  const [{ data: ownerRow }, { data: adminRows }] = await Promise.all([
+    supabase.from("settings").select("admin_email").eq("id", 1).single(),
+    supabase.from("admin_users").select("email").order("created_at"),
+  ]);
   const qrs: QrRow[] = (data ?? []).map((q) => ({
     id: q.id,
     label: q.label,
@@ -48,6 +53,7 @@ export default async function SettingsPage() {
           <Download size={18} aria-hidden /> Download full backup
         </a>
       </Card>
+      <AdminUsers owner={ownerRow?.admin_email ?? ""} me={email} admins={(adminRows ?? []).map((r) => r.email as string)} />
       <div className="flex flex-col gap-2">
         <h2 className="px-1 text-[13px] font-medium tracking-wide text-muted uppercase">Account · {email}</h2>
         <EmailForm currentEmail={email} />

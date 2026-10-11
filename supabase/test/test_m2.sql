@@ -160,6 +160,27 @@ select pg_temp.ok((select count(*) from public.promo_banners) = 1, 'a non-admin 
 select pg_temp.ok(pg_temp.err($q$update public.promo_banners set headline = 'Hacked'$q$) is null and not exists (select 1 from public.promo_banners where headline = 'Hacked'), 'a non-admin cannot edit banners');
 reset role;
 
+-- extra admin logins: allowed by the admin_users list, revoked the moment they are removed
+reset role;
+insert into public.admin_users (email) values ('misis@example.com');
+set role authenticated;
+select set_config('request.jwt.claims', '{"role":"authenticated","email":"Misis@Example.com"}', false);
+select pg_temp.ok(public.is_admin(), 'a listed extra admin is an admin (case-insensitive)');
+select pg_temp.ok((select count(*) from public.admin_users) = 1, 'an extra admin can read the admin list');
+select pg_temp.ok(pg_temp.err($q$insert into public.admin_users (email) values ('evil@example.com')$q$) is not null, 'the browser cannot add admins');
+select pg_temp.ok(pg_temp.err($q$delete from public.admin_users$q$) is not null, 'the browser cannot remove admins');
+select set_config('request.jwt.claims', '{"role":"authenticated","email":"stranger@example.com"}', false);
+select pg_temp.ok(not public.is_admin(), 'a stranger is still not an admin');
+select pg_temp.ok((select count(*) from public.admin_users) = 0, 'a stranger cannot read the admin list');
+reset role;
+delete from public.admin_users where email = 'misis@example.com';
+set role authenticated;
+select set_config('request.jwt.claims', '{"role":"authenticated","email":"misis@example.com"}', false);
+select pg_temp.ok(not public.is_admin(), 'a removed admin loses access immediately');
+select set_config('request.jwt.claims', '{"role":"authenticated","email":"april@example.com"}', false);
+select pg_temp.ok(public.is_admin(), 'the owner stays an admin');
+reset role;
+
 -- retention: personal details of old orders are anonymised, totals and items stay
 update public.orders set created_at = now() - interval '200 days' where phone = '+639173333333';
 update public.customers set created_at = now() - interval '200 days' where phone = '+639173333333';
