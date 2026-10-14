@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { OrderStatus } from "@/lib/admin";
 import { deleteCancelledOrder, setOrderPaid, setOrderStatus } from "./actions";
 
-/** One-tap buttons: the next step in Pending → Ordered → Delivered, plus payment. */
+/** One-tap buttons: Pending → Ordered → Completed (delivered), plus payment. Completed orders leave the supplier summary. */
 export function OrderActions({
   id,
   code,
@@ -87,6 +87,16 @@ export function OrderActions({
             Mark Ordered
           </Button>
         ) : null}
+        {status === "pending" ? (
+          <Button
+            variant="secondary"
+            loading={busy === "delivered"}
+            disabled={pending}
+            onClick={() => run("delivered", () => setOrderStatus(id, "delivered"))}
+          >
+            Mark Complete
+          </Button>
+        ) : null}
         {status === "ordered" ? (
           <Button
             loading={busy === "delivered"}
@@ -95,7 +105,7 @@ export function OrderActions({
               run("delivered", () => setOrderStatus(id, "delivered"))
             }
           >
-            Mark Delivered
+            Mark Complete
           </Button>
         ) : null}
         {!paid ? (

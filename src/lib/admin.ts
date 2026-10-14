@@ -64,7 +64,7 @@ export type AdminOrder = {
 export const STATUS_LABELS: Record<OrderStatus, string> = {
   pending: "Pending",
   ordered: "Ordered",
-  delivered: "Delivered",
+  delivered: "Completed",
   cancelled: "Cancelled",
 };
 

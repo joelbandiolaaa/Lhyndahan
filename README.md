@@ -14,7 +14,7 @@ Orders are batched weekly: the cutoff is **Wednesday 6:00 AM (Manila)**, **KUS D
 
 **Admin** (`/admin`, one email only)
 - Overview: sales, profit, unpaid, repeat customers, traffic and sources, per batch.
-- Orders: filters, status tabs, mark paid / delivered, Excel (CSV) export.
+- Orders: filters, status tabs, mark paid / **Complete**, Excel (CSV) export. Tick orders to build a custom batch: see their totals, copy or download them for the supplier, or mark them all Ordered/Complete at once.
 - Batch: totals per product, "Copy for Supplier", supplier cost.
 - Delivery: per-day lists with the amount to collect, printable.
 - Products: CRUD, categories, multi-image upload, supplier price and delivery markup.
@@ -102,7 +102,7 @@ Checks before pushing: `npx tsc --noEmit`, `npx eslint src`, `npm run build`.
 1. Orders come in until Wednesday 6:00 AM. A new batch starts automatically after the cutoff.
 2. Thursday: open **Batch**, tap **Copy for Supplier**, send it, then mark the orders as ordered.
 3. Friday and Saturday: open **Delivery** for the lists and the amounts to collect. Print them if you want.
-4. Mark orders **Paid** and **Delivered** as they go.
+4. Mark orders **Paid** and **Complete** as they go. The Batch summary counts only the statuses you pick (default Pending + Ordered), so completed and cancelled orders no longer inflate the supplier order.
 
 ## Security notes
 

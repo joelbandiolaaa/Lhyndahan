@@ -31,7 +31,30 @@ select pg_temp.ok((select (j->'traffic'->>'visitors')::int from d) = 2, 'Dashboa
 select pg_temp.ok((select j->'traffic'->'top_viewed'->0->>'name' from d) = 'Hopia Monggo x10', 'Top viewed product has its name');
 select pg_temp.ok((select (j->>'unpaid')::numeric from d) = (select (j->>'sales')::numeric from d), 'Nothing paid yet: unpaid = sales');
 select pg_temp.ok((select count(*) from public.batch_summary((select (j->'batch'->>'id')::uuid from d))) >= 1, 'Batch summary returns product totals');
+-- each order status against the supplier summary: only what still has to be ordered is counted
+create temp table sumb as select coalesce(sum(qty), 0) as q from public.batch_summary((select (j->'batch'->>'id')::uuid from d));
+create or replace function pg_temp.sum_for(st text, picks text[] default null) returns bigint language plpgsql as $f$
+declare bid uuid; r bigint;
+begin
+  select (j->'batch'->>'id')::uuid into bid from d;
+  reset role;
+  update public.orders set status = st::public.order_status where batch_id = bid;
+  set role authenticated;
+  perform set_config('request.jwt.claims', '{"role":"authenticated","email":"april@example.com"}', false);
+  if picks is null then select coalesce(sum(qty), 0) into r from public.batch_summary(bid);
+  else select coalesce(sum(qty), 0) into r from public.batch_summary_by_status(bid, picks); end if;
+  return r;
+end $f$;
+select pg_temp.ok(pg_temp.sum_for('pending') = (select q from sumb), 'Pending orders are on the supplier summary');
+select pg_temp.ok(pg_temp.sum_for('ordered') = (select q from sumb), 'Ordered orders are on it by default');
+select pg_temp.ok(pg_temp.sum_for('delivered') = 0, 'Completed orders are left off by default');
+select pg_temp.ok(pg_temp.sum_for('cancelled') = 0, 'Cancelled orders are left off by default');
+select pg_temp.ok(pg_temp.sum_for('cancelled', array['pending','ordered','delivered','cancelled']) = 0, 'Cancelled orders are never counted, even if asked');
+select pg_temp.ok(pg_temp.sum_for('delivered', array['delivered']) = (select q from sumb), 'Completed can be shown on its own');
+select pg_temp.ok(pg_temp.sum_for('ordered', array['pending']) = 0, 'Pending-only leaves out Ordered orders');
+select pg_temp.ok(pg_temp.sum_for('pending', array['pending']) = (select q from sumb), 'Pending-only counts Pending orders');
 reset role;
+update public.orders set status = 'pending' where batch_id = (select (j->'batch'->>'id')::uuid from d);
 
 set role authenticated;
 select set_config('request.jwt.claims', '{"role":"authenticated","email":"stranger@example.com"}', false);

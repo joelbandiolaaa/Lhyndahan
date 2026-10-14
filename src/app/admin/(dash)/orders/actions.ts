@@ -30,6 +30,26 @@ export async function setOrderStatus(id: string, status: string): Promise<Action
   return { ok: true };
 }
 
+/** Same as setOrderStatus for many orders at once (the "custom batch" selection). Cancelling stays one-by-one on purpose. */
+export async function setOrdersStatus(ids: string[], status: string): Promise<ActionResult> {
+  const { supabase } = await requireAdmin();
+  const s = z.enum(["pending", "ordered", "delivered"]).safeParse(status);
+  const list = z.array(uuid).min(1).max(100).safeParse(ids);
+  if (!s.success || !list.success) return { ok: false, message: "Invalid selection." };
+
+  const now = new Date().toISOString();
+  const patch: Record<string, unknown> = { status: s.data, seen_by_admin: true };
+  if (s.data === "ordered") patch.ordered_at = now;
+  if (s.data === "delivered") patch.delivered_at = now;
+  if (s.data === "pending") Object.assign(patch, { ordered_at: null, delivered_at: null, cancelled_at: null });
+
+  // Cancelled orders are never touched by a bulk change.
+  const { data, error } = await supabase.from("orders").update(patch).in("id", list.data).neq("status", "cancelled").select("id");
+  if (error) return { ok: false, message: "Couldn't update. Please try again." };
+  refresh();
+  return { ok: true, message: `${data?.length ?? 0} order(s) updated.` };
+}
+
 export async function setOrderPaid(id: string, paid: boolean): Promise<ActionResult> {
   const { supabase } = await requireAdmin();
   if (!uuid.safeParse(id).success) return { ok: false, message: "Invalid." };

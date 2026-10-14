@@ -41,35 +41,61 @@ function styleHeader(row: ExcelJS.Row) {
  * GET /admin/batch/export?batch=… → one .xlsx with two tabs:
  *   "Supplier order": how many of each product (give this to the supplier; no prices, no customers)
  *   "Per customer":   one row per order (for you: who ordered what, where, and whether it's paid)
- * Cancelled orders are left out of both.
+ * Both tabs count only ?s=pending,ordered,delivered (default pending,ordered); cancelled orders are never included.
+ * ?orders=id1,id2,… builds both tabs for just those orders (the custom batch picked on the Orders page).
  */
 export async function GET(req: Request) {
   const supabase = await supabaseServer();
   const { data: isAdmin } = await supabase.rpc("is_admin");
   if (!isAdmin) return new Response("Unauthorized", { status: 401 });
 
-  const { data: batchRows } = await supabase.from("batches").select("*").order("cutoff_at", { ascending: false }).limit(26);
-  const batches = (batchRows ?? []) as Batch[];
-  const { current, lastClosed, recentlyClosed } = batchContext(batches);
-  const wanted = new URL(req.url).searchParams.get("batch");
-  const batch = batches.find((b) => b.id === wanted) ?? recentlyClosed ?? current ?? lastClosed ?? null;
-  if (!batch) return new Response("No batch yet", { status: 404 });
+  const sp = new URL(req.url).searchParams;
+  // Custom selection: ?orders=id1,id2,… → a supplier sheet and customer sheet for exactly those orders.
+  const customIds = (sp.get("orders") ?? "").split(",").filter((id) => /^[0-9a-f-]{36}$/i.test(id)).slice(0, 100);
+  const counted = (sp.get("s") ?? "").split(",").filter((x) => ["pending", "ordered", "delivered"].includes(x));
+  const statuses = counted.length > 0 ? counted : ["pending", "ordered"];
 
-  const [{ data: summary, error: e1 }, { data: orderData, error: e2 }] = await Promise.all([
-    supabase.rpc("batch_summary", { p_batch_id: batch.id }),
-    supabase
+  const ORDER_COLS = "code, name, phone, delivery_type, delivery_date, address, landmark, notes, payment_method, qr_provider, paid, status, total, order_items(product_name, qty)";
+  let batch: Batch | null = null;
+  let items: { product: string; qty: number }[];
+  let orders: OrderRow[];
+
+  if (customIds.length > 0) {
+    const { data, error } = await supabase
       .from("orders")
-      .select("code, name, phone, delivery_type, delivery_date, address, landmark, notes, payment_method, qr_provider, paid, status, total, order_items(product_name, qty)")
-      .eq("batch_id", batch.id)
+      .select(ORDER_COLS)
+      .in("id", customIds)
       .neq("status", "cancelled")
-      .order("delivery_type", { ascending: false }) // "office" (KUS) before "outside"
-      .order("name", { ascending: true })
-      .limit(2000),
-  ]);
-  if (e1 || e2) return new Response("Export failed", { status: 500 });
+      .order("delivery_type", { ascending: false })
+      .order("name", { ascending: true });
+    if (error) return new Response("Export failed", { status: 500 });
+    orders = (data ?? []) as unknown as OrderRow[];
+    const totals = new Map<string, number>();
+    for (const o of orders) for (const it of o.order_items) totals.set(it.product_name, (totals.get(it.product_name) ?? 0) + it.qty);
+    items = [...totals.entries()].sort((x, y) => x[0].localeCompare(y[0])).map(([product, qty]) => ({ product, qty }));
+  } else {
+    const { data: batchRows } = await supabase.from("batches").select("*").order("cutoff_at", { ascending: false }).limit(26);
+    const batches = (batchRows ?? []) as Batch[];
+    const { current, lastClosed, recentlyClosed } = batchContext(batches);
+    const wanted = sp.get("batch");
+    batch = batches.find((b) => b.id === wanted) ?? recentlyClosed ?? current ?? lastClosed ?? null;
+    if (!batch) return new Response("No batch yet", { status: 404 });
 
-  const items = ((summary ?? []) as SummaryRow[]).map((r) => ({ product: r.product_name, qty: Number(r.qty) }));
-  const orders = (orderData ?? []) as unknown as OrderRow[];
+    const [{ data: summary, error: e1 }, { data: orderData, error: e2 }] = await Promise.all([
+      supabase.rpc("batch_summary_by_status", { p_batch_id: batch.id, p_statuses: statuses }),
+      supabase
+        .from("orders")
+        .select(ORDER_COLS)
+        .eq("batch_id", batch.id)
+        .in("status", statuses)
+        .order("delivery_type", { ascending: false }) // "office" (KUS) before "outside"
+        .order("name", { ascending: true })
+        .limit(2000),
+    ]);
+    if (e1 || e2) return new Response("Export failed", { status: 500 });
+    items = ((summary ?? []) as SummaryRow[]).map((r) => ({ product: r.product_name, qty: Number(r.qty) }));
+    orders = (orderData ?? []) as unknown as OrderRow[];
+  }
 
   const wb = new ExcelJS.Workbook();
   wb.creator = "Lhyndahan";
@@ -78,9 +104,11 @@ export async function GET(req: Request) {
   // ---- Tab 1: Supplier order ----
   const s1 = wb.addWorksheet("Supplier order", { views: [{ state: "frozen", ySplit: 4 }] });
   s1.columns = [{ width: 44 }, { width: 12 }];
-  s1.getCell("A1").value = `Order for ${formatDay(batch.office_date)} (KUS) and ${formatDay(batch.outside_date)}`;
+  s1.getCell("A1").value = batch ? `Order for ${formatDay(batch.office_date)} (KUS) and ${formatDay(batch.outside_date)}` : `Custom order · ${orders.length} selected order${orders.length === 1 ? "" : "s"}`;
   s1.getCell("A1").font = { bold: true, size: 14 };
-  s1.getCell("A2").value = `Batch ${batch.code} · ${orders.length} order${orders.length === 1 ? "" : "s"}`;
+  s1.getCell("A2").value = batch
+    ? `Batch ${batch.code} · ${orders.length} order${orders.length === 1 ? "" : "s"} · counting:  ${statuses.join(", ")}`
+    : "Only the orders you selected";
   s1.getCell("A2").font = { color: { argb: "FF707070" } };
   const h1 = s1.getRow(4);
   h1.values = ["Product", "Qty"];
@@ -156,7 +184,7 @@ export async function GET(req: Request) {
   return new Response(buffer as ArrayBuffer, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="lhyndahan-batch-${batch.code}.xlsx"`,
+      "Content-Disposition": `attachment; filename="lhyndahan-${batch ? `batch-${batch.code}` : "custom"}.xlsx"`,
       "Cache-Control": "no-store",
     },
   });
