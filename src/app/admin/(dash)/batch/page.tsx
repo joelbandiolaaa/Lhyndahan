@@ -7,6 +7,7 @@ import { batchContext, STATUS_LABELS, type Batch } from "@/lib/admin";
 import { formatDay } from "@/lib/dates";
 import { formatPeso } from "@/lib/money";
 import { BatchPicker } from "../batch-picker";
+import { MoveOrder } from "../orders/move-order";
 import { SupplierTools } from "./supplier-tools";
 
 export const metadata = { title: "Batch summary" };
@@ -45,6 +46,19 @@ export default async function BatchPage(props: PageProps<"/admin/batch">) {
   ]);
   const counts: Record<string, number> = {};
   for (const r of (statusRows ?? []) as { status: string }[]) counts[r.status] = (counts[r.status] ?? 0) + 1;
+  // Orders that came in right after this batch's cutoff sit in the next batch: offer to pull them in.
+  const nextBatch = batches.filter((b) => new Date(b.starts_at).getTime() >= new Date(batch.cutoff_at).getTime()).sort((a, b) => a.starts_at.localeCompare(b.starts_at))[0];
+  const { data: lateRows } = nextBatch && !open(batch)
+    ? await supabase
+        .from("orders")
+        .select("id, code, name, delivery_type, total, order_items(product_name, qty)")
+        .eq("batch_id", nextBatch.id)
+        .eq("status", "pending")
+        .is("moved_from_batch_id", null)
+        .order("created_at", { ascending: true })
+        .limit(20)
+    : { data: [] };
+  const late = (lateRows ?? []) as { id: string; code: string; name: string; delivery_type: "office" | "outside"; total: number; order_items: { product_name: string; qty: number }[] }[];
   const hrefFor = (list: Counted[]) => `/admin/batch?batch=${batch.id}&s=${list.join(",")}`;
   const items = ((rows ?? []) as Row[]).map((r) => ({ ...r, qty: Number(r.qty) }));
   const pieces = items.reduce((n, r) => n + r.qty, 0);
@@ -97,6 +111,38 @@ export default async function BatchPage(props: PageProps<"/admin/batch">) {
           })}
         </div>
       </div>
+
+      {nextBatch && late.length > 0 ? (
+        <Card className="flex flex-col gap-3 p-4">
+          <div>
+            <p className="text-[16px] font-semibold">Came in after the cutoff ({late.length})</p>
+            <p className="text-[13px] text-muted">
+              These are in the next batch (delivery {formatDay(nextBatch.office_date, { weekday: false })}). Add the small ones here if you can still squeeze them in.
+            </p>
+          </div>
+          <ul className="flex flex-col gap-3">
+            {late.map((o) => (
+              <li key={o.id} className="flex flex-col gap-1 border-t border-black/[0.08] pt-3">
+                <p className="text-[15px]">
+                  <span className="font-semibold">{o.code}</span> · {o.name} · {o.delivery_type === "office" ? "KUS" : "My address"}
+                </p>
+                <p className="text-[14px] text-muted">
+                  {o.order_items.map((i) => `${i.qty}× ${i.product_name}`).join(", ")} · {formatPeso(o.total)}
+                </p>
+                <MoveOrder
+                  orderId={o.id}
+                  code={o.code}
+                  name={o.name}
+                  deliveryType={o.delivery_type}
+                  currentBatchId={nextBatch.id}
+                  targets={[{ id: batch.id, office_date: batch.office_date, outside_date: batch.outside_date, supplier_ordered: batch.supplier_ordered_at !== null }]}
+                  compact
+                />
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
 
       {batch.supplier_ordered_at ? <Notice tone="success">This batch has been ordered from the supplier.</Notice> : null}
 

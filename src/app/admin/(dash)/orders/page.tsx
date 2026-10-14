@@ -15,6 +15,7 @@ import { paymentShortLabel } from "@/lib/payment";
 import { formatPhone } from "@/lib/phone";
 import { OrderFilters } from "./filters";
 import { MarkSeen } from "./mark-seen";
+import { MoveOrder, type MoveTarget } from "./move-order";
 import { OrderActions } from "./order-actions";
 import {
   SelectAll,
@@ -81,7 +82,7 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
     supabase
       .from("orders")
       .select(
-        "id, code, name, phone, delivery_type, address, landmark, map_url, notes, delivery_date, payment_method, qr_provider, status, paid, seen_by_admin, total, created_at, batch_id, order_items(id, product_name, qty, selling_price)",
+        "id, code, name, phone, delivery_type, address, landmark, map_url, notes, delivery_date, payment_method, qr_provider, status, paid, seen_by_admin, total, created_at, batch_id, moved_from_batch_id, order_items(id, product_name, qty, selling_price)",
       )
       .order("created_at", { ascending: false })
       .limit(300),
@@ -118,6 +119,8 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
     .filter((o) => !o.paid)
     .reduce((n, o) => n + Number(o.total), 0);
 
+  const targets: MoveTarget[] = batches.slice(0, 6).map((b) => ({ id: b.id, office_date: b.office_date, outside_date: b.outside_date, supplier_ordered: b.supplier_ordered_at !== null }));
+  const batchById = new Map(batches.map((b) => [b.id, b]));
   const pickOf = (o: AdminOrder): Pick => ({
     id: o.id,
     code: o.code,
@@ -257,6 +260,12 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
                       {o.delivery_type === "office" ? "KUS" : "My address"}
                     </span>{" "}
                     · {formatDay(o.delivery_date)}
+                    {o.moved_from_batch_id && batchById.get(o.moved_from_batch_id) ? (
+                      <span className="ml-2 rounded-full bg-warning-soft px-2 py-0.5 text-[12px] font-medium text-warning">
+                        Moved from{" "}
+                        {formatDay(batchById.get(o.moved_from_batch_id)!.office_date, { weekday: false })} batch
+                      </span>
+                    ) : null}
                   </p>
                   {o.delivery_type === "outside" ? (
                     <p className="text-muted">{o.address}</p>
@@ -310,6 +319,16 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
                   status={o.status}
                   paid={o.paid}
                 />
+                {o.status === "pending" || o.status === "ordered" ? (
+                  <MoveOrder
+                    orderId={o.id}
+                    code={o.code}
+                    name={o.name}
+                    deliveryType={o.delivery_type}
+                    currentBatchId={o.batch_id}
+                    targets={targets}
+                  />
+                ) : null}
               </Card>
             </li>
           ))}

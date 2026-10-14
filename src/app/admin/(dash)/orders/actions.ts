@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
+import { formatDay } from "@/lib/dates";
 import type { ActionResult } from "@/lib/types";
 
 const uuid = z.uuid();
@@ -109,4 +110,25 @@ export async function markBatchOrdered(batchId: string): Promise<ActionResult> {
   await supabase.from("batches").update({ supplier_ordered_at: now }).eq("id", batchId);
   refresh();
   return { ok: true, message: `${data?.length ?? 0} order(s) marked as Ordered.` };
+}
+
+/** Late order: put it into another batch (usually the one that just closed) and give it that batch's delivery date. */
+export async function moveOrderToBatch(orderId: string, batchId: string): Promise<ActionResult & { deliveryDate?: string }> {
+  const { supabase } = await requireAdmin();
+  if (!uuid.safeParse(orderId).success || !uuid.safeParse(batchId).success) return { ok: false, message: "Invalid." };
+  const { data, error } = await supabase.rpc("move_order_to_batch", { p_order_id: orderId, p_batch_id: batchId });
+  if (error) {
+    const msg = error.message.includes("not_movable")
+      ? "Only Pending or Ordered orders can be moved."
+      : "Couldn't move the order. Please try again.";
+    return { ok: false, message: msg };
+  }
+  const r = data as { delivery_date: string; supplier_ordered: boolean };
+  // No revalidate here on purpose: the order leaves this list once moved, and the confirmation (with the
+  // customer message to copy) must stay on screen. The "Done" button refreshes the page.
+  return {
+    ok: true,
+    deliveryDate: r.delivery_date,
+    message: `Moved. Delivery is now ${formatDay(r.delivery_date)}.${r.supplier_ordered ? " That batch was already ordered from the supplier, so this is an add-on." : ""}`,
+  };
 }

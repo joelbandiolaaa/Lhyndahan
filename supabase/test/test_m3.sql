@@ -56,9 +56,37 @@ select pg_temp.ok(pg_temp.sum_for('pending', array['pending']) = (select q from 
 reset role;
 update public.orders set status = 'pending' where batch_id = (select (j->'batch'->>'id')::uuid from d);
 
+-- moving an order into another batch (late order squeezed into the batch that just closed)
+reset role;
+create temp table mv as
+  select o.id as oid, o.batch_id as home, o.delivery_type as dt, o.delivery_date as d0,
+         (select id from public.batches where id <> o.batch_id order by cutoff_at limit 1) as other
+  from public.orders o order by o.created_at limit 1;
+grant select on mv to authenticated, anon;
+update mv set other = (select (public.get_or_create_batch(now() + interval '8 days')).id) where other is null;
+set role authenticated;
+select set_config('request.jwt.claims', '{"role":"authenticated","email":"april@example.com"}', false);
+select public.move_order_to_batch((select oid from mv), (select other from mv));
+select pg_temp.ok((select batch_id from public.orders where id = (select oid from mv)) = (select other from mv), 'Order moved into the other batch');
+select pg_temp.ok((select delivery_date from public.orders o where o.id = (select oid from mv)) =
+  (select case when (select dt from mv) = 'office' then b.office_date else b.outside_date end from public.batches b where b.id = (select other from mv)), 'Delivery date follows the new batch and the order''s delivery type');
+select pg_temp.ok((select moved_from_batch_id from public.orders where id = (select oid from mv)) = (select home from mv), 'Remembers the batch it came from');
+select pg_temp.ok((select count(*) from public.batch_summary_by_status((select other from mv), array['pending'])) >= 1, 'Moved order counts in the new batch summary');
+select public.move_order_to_batch((select oid from mv), (select home from mv));
+select pg_temp.ok((select moved_from_batch_id from public.orders where id = (select oid from mv)) is null, 'Moving it back home clears the moved flag');
+select pg_temp.ok((select delivery_date from public.orders where id = (select oid from mv)) = (select d0 from mv), 'Moving it back restores the original delivery date');
+reset role;
+update public.orders set status = 'delivered' where id = (select oid from mv);
+set role authenticated;
+select set_config('request.jwt.claims', '{"role":"authenticated","email":"april@example.com"}', false);
+select pg_temp.ok(pg_temp.err(format('select public.move_order_to_batch(%L, %L)', (select oid from mv), (select other from mv))) = 'not_movable', 'Completed orders cannot be moved');
+reset role;
+update public.orders set status = 'pending' where id = (select oid from mv);
+
 set role authenticated;
 select set_config('request.jwt.claims', '{"role":"authenticated","email":"stranger@example.com"}', false);
 select pg_temp.ok(pg_temp.err($q$select public.admin_dashboard()$q$) = 'forbidden', 'stranger cannot read the dashboard');
 select pg_temp.ok((select count(*) from public.batch_summary(gen_random_uuid())) = 0, 'stranger gets no batch summary');
+select pg_temp.ok(pg_temp.err(format('select public.move_order_to_batch(%L, %L)', (select oid from mv), (select other from mv))) = 'forbidden', 'stranger cannot move orders');
 reset role;
 \echo 'ALL M3 DATABASE TESTS PASSED'

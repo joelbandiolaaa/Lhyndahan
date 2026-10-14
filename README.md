@@ -14,7 +14,7 @@ Orders are batched weekly: the cutoff is **Wednesday 6:00 AM (Manila)**, **KUS D
 
 **Admin** (`/admin`, one email only)
 - Overview: sales, profit, unpaid, repeat customers, traffic and sources, per batch.
-- Orders: filters, status tabs, mark paid / **Complete**, Excel (CSV) export. Tick orders to build a custom batch: see their totals, copy or download them for the supplier, or mark them all Ordered/Complete at once.
+- Orders: filters, status tabs, mark paid / **Complete**, Excel (CSV) export. **Change delivery** moves a Pending/Ordered order into another batch (e.g. a late order into the batch that just closed) and gives it that batch's delivery date; the Batch tab also lists orders that came in after the cutoff with an "Add to this batch" button. Tick orders to build a custom batch: see their totals, copy or download them for the supplier, or mark them all Ordered/Complete at once.
 - Batch: totals per product, "Copy for Supplier", supplier cost.
 - Delivery: per-day lists with the amount to collect, printable.
 - Products: CRUD, categories, multi-image upload, supplier price and delivery markup.

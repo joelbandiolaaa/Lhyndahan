@@ -58,6 +58,7 @@ export type AdminOrder = {
   total: number;
   created_at: string;
   batch_id: string;
+  moved_from_batch_id: string | null;
   order_items: { id: string; product_name: string; qty: number; selling_price: number }[];
 };
 
