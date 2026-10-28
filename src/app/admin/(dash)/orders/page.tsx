@@ -127,6 +127,7 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
     id: o.id,
     code: o.code,
     name: o.name,
+    pickup: batchById.get(o.batch_id)?.office_date ?? "",
     items: o.order_items.map((i) => ({ name: i.product_name, qty: i.qty, bakery: (i.product_id && bakeryOf.get(i.product_id)) || "Other" })),
   });
   const pickable = live.map(pickOf);

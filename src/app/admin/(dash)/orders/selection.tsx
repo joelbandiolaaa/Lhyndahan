@@ -4,10 +4,11 @@ import { Check, CheckSquare, Copy, Download, MessageSquareText, Square, X } from
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { formatDay } from "@/lib/dates";
 import { BAKERY_SMS, groupBySupplier, smsHref, supplierMessage } from "@/lib/bakeries";
 import { setOrdersStatus } from "./actions";
 
-export type Pick = { id: string; code: string; name: string; items: { name: string; qty: number; bakery: string }[] };
+export type Pick = { id: string; code: string; name: string; pickup: string; items: { name: string; qty: number; bakery: string }[] };
 
 const MAX = 100;
 const Ctx = createContext<{ picked: Map<string, Pick>; toggle: (p: Pick) => void; setMany: (ps: Pick[]) => void; clear: () => void } | null>(null);
@@ -98,6 +99,8 @@ function SelectionBar() {
   const groups = groupBySupplier([...totals.values()], (r) => r.name);
   const pieces = [...totals.values()].reduce((n, r) => n + r.qty, 0);
   const ids = [...picked.keys()];
+  const pickups = [...picked.values()].map((p) => p.pickup).filter(Boolean).sort();
+  const pickupDay = pickups[0] ? formatDay(pickups[0]) : "";
 
   async function copy(bakery: string, text: string) {
     try {
@@ -148,7 +151,7 @@ function SelectionBar() {
                 <div className="flex items-center gap-1.5">
                 {BAKERY_SMS[bakery] ? (
                   <a
-                    href={smsHref(BAKERY_SMS[bakery], supplierMessage(rows.map((r) => ({ name: r.name, qty: r.qty }))))}
+                    href={smsHref(BAKERY_SMS[bakery], supplierMessage(rows.map((r) => ({ name: r.name, qty: r.qty })), pickupDay))}
                     className="tap flex min-h-11 items-center gap-1.5 rounded-full bg-accent px-3 text-[13px] font-medium text-accent-ink"
                   >
                     <MessageSquareText size={15} aria-hidden /> Text
@@ -156,7 +159,7 @@ function SelectionBar() {
                 ) : null}
                 <button
                   type="button"
-                  onClick={() => copy(bakery, supplierMessage(rows.map((r) => ({ name: r.name, qty: r.qty }))))}
+                  onClick={() => copy(bakery, supplierMessage(rows.map((r) => ({ name: r.name, qty: r.qty })), pickupDay))}
                   className="tap flex min-h-11 items-center gap-1.5 rounded-full bg-accent-soft px-3 text-[13px] font-medium text-link"
                 >
                   {copied === bakery ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />} {copied === bakery ? "Copied" : "Copy"}

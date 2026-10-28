@@ -43,8 +43,20 @@ export function groupBySupplier<T extends { bakery: string }>(rows: T[], nameOf:
     .sort((a, b) => rank(a[1]) - rank(b[1]));
 }
 
-/** The text to paste to one bakery: only that bakery's products. */
-export function supplierMessage(lines: { name: string; qty: number }[], day?: string): string {
-  const pieces = lines.reduce((n, l) => n + l.qty, 0);
-  return [day ? `Hi! Order for ${day}:` : "Hi! Order:", "", ...lines.map((l) => `${l.name} x ${l.qty}`), "", `Total: ${pieces} pcs`, "Thank you!"].join("\n");
+/** Admin-only: who the bakeries see as the customer on the order text. */
+const ORDERER = { name: "Joel Bandiola", phone: "09285427741" };
+
+/**
+ * The text to paste to one supplier, in the format they ask for:
+ *   Name / Contact # / Pickup date / Order: then "<qty> - <product>" per line.
+ * Quantity first, because product names already contain "x10", "x6"... ("Hopia Baboy x10 x 2" is easy to misread).
+ */
+export function supplierMessage(lines: { name: string; qty: number }[], pickupDay = ""): string {
+  return [
+    `Name: ${ORDERER.name}`,
+    `Contact #: ${ORDERER.phone}`,
+    `Pickup date: ${pickupDay}`,
+    "Order:",
+    ...lines.map((l) => `${l.qty} - ${l.name}`),
+  ].join("\n");
 }
