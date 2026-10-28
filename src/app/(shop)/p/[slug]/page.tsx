@@ -14,7 +14,7 @@ export const revalidate = 60;
 async function getProduct(slug: string) {
   const { data } = await supabasePublic()
     .from("products")
-    .select("id, slug, name, bakery, category, description, selling_price, product_images(id, path, sort_order, is_primary)")
+    .select("id, slug, name, category, description, selling_price, product_images(id, path, sort_order, is_primary)")
     .eq("slug", slug)
     .maybeSingle();
   return data as unknown as ProductWithImages | null;

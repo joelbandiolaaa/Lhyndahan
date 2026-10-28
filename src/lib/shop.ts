@@ -67,7 +67,7 @@ export async function getPromoSlides(): Promise<PromoSlide[]> {
 export async function getShopProducts(): Promise<ProductWithImages[]> {
   const { data } = await supabasePublic()
     .from("products")
-    .select("id, slug, name, bakery, category, description, selling_price, sort_order, product_images(id, path, sort_order, is_primary)")
+    .select("id, slug, name, category, description, selling_price, sort_order, product_images(id, path, sort_order, is_primary)")
     .order("sort_order")
     .order("name");
   return (data ?? []) as unknown as ProductWithImages[];

@@ -88,6 +88,18 @@ select pg_temp.ok(pg_temp.err(format('select public.move_order_to_batch(%L, %L)'
 reset role;
 update public.orders set status = 'pending' where id = (select oid from mv);
 
+-- public (anon) visitors can read the shop fields only, never cost / profit / markup / bakery
+set role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', false);
+select pg_temp.ok(pg_temp.err($q$select supplier_price from public.products$q$) is not null, 'anon cannot read supplier_price');
+select pg_temp.ok(pg_temp.err($q$select profit_per_piece from public.products$q$) is not null, 'anon cannot read profit_per_piece');
+select pg_temp.ok(pg_temp.err($q$select delivery_markup from public.products$q$) is not null, 'anon cannot read delivery_markup');
+select pg_temp.ok(pg_temp.err($q$select bakery from public.products$q$) is not null, 'anon cannot read bakery');
+select pg_temp.ok(pg_temp.err($q$select * from public.products$q$) is not null, 'anon cannot select * from products');
+select pg_temp.ok(pg_temp.err($q$select id, slug, name, category, description, selling_price, sort_order from public.products$q$) is null, 'anon can still read the shop fields');
+select pg_temp.ok(pg_temp.err($q$select p.id, i.path from public.products p join public.product_images i on i.product_id = p.id$q$) is null, 'anon can still read product photos');
+reset role;
+
 set role authenticated;
 select set_config('request.jwt.claims', '{"role":"authenticated","email":"stranger@example.com"}', false);
 select pg_temp.ok(pg_temp.err($q$select public.admin_dashboard()$q$) = 'forbidden', 'stranger cannot read the dashboard');
