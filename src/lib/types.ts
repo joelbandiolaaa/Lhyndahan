@@ -1,4 +1,4 @@
-export const BAKERIES = ["Ribbonets", "RSF Bakery", "D' Original", "Edson Hopia Tipas"] as const;
+export const BAKERIES = ["Ribbonets", "Momsue", "Sweet Cassie's", "D' Original", "RSF Bakery", "Edson Hopia Tipas"] as const;
 export type Bakery = (typeof BAKERIES)[number];
 
 export type Category = { id: string; name: string; sort_order: number };

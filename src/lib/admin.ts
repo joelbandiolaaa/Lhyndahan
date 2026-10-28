@@ -59,7 +59,7 @@ export type AdminOrder = {
   created_at: string;
   batch_id: string;
   moved_from_batch_id: string | null;
-  order_items: { id: string; product_name: string; qty: number; selling_price: number }[];
+  order_items: { id: string; product_id: string | null; product_name: string; qty: number; selling_price: number }[];
 };
 
 export const STATUS_LABELS: Record<OrderStatus, string> = {

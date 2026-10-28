@@ -102,7 +102,7 @@ Checks before pushing: `npx tsc --noEmit`, `npx eslint src`, `npm run build`.
 1. Orders come in until Wednesday 6:00 AM. A new batch starts automatically after the cutoff.
 2. Thursday: open **Batch**, tap **Copy for Supplier**, send it, then mark the orders as ordered.
 3. Friday and Saturday: open **Delivery** for the lists and the amounts to collect. Print them if you want.
-4. Mark orders **Paid** and **Complete** as they go. The Batch summary counts only the statuses you pick (default Pending + Ordered), so completed and cancelled orders no longer inflate the supplier order.
+4. Mark orders **Paid** and **Complete** as they go. The Batch summary counts only the statuses you pick (default Pending + Ordered), so completed and cancelled orders no longer inflate the supplier order. The summary, the "Copy for ..." message and the Excel are split **per bakery** (each bakery is a separate supplier order); set a product's bakery on its product form.
 
 ## Security notes
 

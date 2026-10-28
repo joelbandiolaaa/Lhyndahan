@@ -56,6 +56,11 @@ select pg_temp.ok(pg_temp.sum_for('pending', array['pending']) = (select q from 
 reset role;
 update public.orders set status = 'pending' where batch_id = (select (j->'batch'->>'id')::uuid from d);
 
+-- supplier summary split per bakery adds up to the same totals
+select pg_temp.ok((select coalesce(sum(qty), 0) from public.batch_supplier_summary((select (j->'batch'->>'id')::uuid from d), array['pending','ordered'])) =
+                  (select coalesce(sum(qty), 0) from public.batch_summary_by_status((select (j->'batch'->>'id')::uuid from d), array['pending','ordered'])), 'Per-bakery supplier summary adds up to the same pieces');
+select pg_temp.ok((select count(*) from public.batch_supplier_summary((select (j->'batch'->>'id')::uuid from d), array['pending','ordered']) where bakery is null) = 0, 'Every line has a bakery');
+
 -- moving an order into another batch (late order squeezed into the batch that just closed)
 reset role;
 create temp table mv as

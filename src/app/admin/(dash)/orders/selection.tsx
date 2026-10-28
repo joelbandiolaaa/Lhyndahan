@@ -4,9 +4,10 @@ import { Check, CheckSquare, Copy, Download, Square, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { groupByBakery, supplierMessage } from "@/lib/bakeries";
 import { setOrdersStatus } from "./actions";
 
-export type Pick = { id: string; code: string; name: string; items: { name: string; qty: number }[] };
+export type Pick = { id: string; code: string; name: string; items: { name: string; qty: number; bakery: string }[] };
 
 const MAX = 100;
 const Ctx = createContext<{ picked: Map<string, Pick>; toggle: (p: Pick) => void; setMany: (ps: Pick[]) => void; clear: () => void } | null>(null);
@@ -80,19 +81,25 @@ function SelectionBar() {
   const { picked, clear } = useSel();
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   if (picked.size === 0) return null;
 
-  const totals = new Map<string, number>();
-  for (const p of picked.values()) for (const i of p.items) totals.set(i.name, (totals.get(i.name) ?? 0) + i.qty);
-  const rows = [...totals.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  const pieces = rows.reduce((n, [, q]) => n + q, 0);
-  const text = ["Hi! Order:", "", ...rows.map(([n, q]) => `${n} x ${q}`), "", `Total: ${pieces} pcs`, "Thank you!"].join("\n");
+  // One supplier message per bakery: each bakery is ordered separately.
+  const totals = new Map<string, { bakery: string; name: string; qty: number }>();
+  for (const p of picked.values())
+    for (const i of p.items) {
+      const key = `${i.bakery}\u0000${i.name}`;
+      const cur = totals.get(key) ?? { bakery: i.bakery, name: i.name, qty: 0 };
+      cur.qty += i.qty;
+      totals.set(key, cur);
+    }
+  const groups = groupByBakery([...totals.values()].sort((a, b) => a.name.localeCompare(b.name)));
+  const pieces = [...totals.values()].reduce((n, r) => n + r.qty, 0);
   const ids = [...picked.keys()];
 
-  async function copy() {
+  async function copy(bakery: string, text: string) {
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -103,8 +110,8 @@ function SelectionBar() {
       document.execCommand("copy");
       ta.remove();
     }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied(bakery);
+    setTimeout(() => setCopied((c) => (c === bakery ? null : c)), 2000);
   }
 
   function mark(status: "ordered" | "delivered") {
@@ -133,23 +140,36 @@ function SelectionBar() {
             <X size={20} aria-hidden />
           </button>
         </div>
-        <ul className="flex max-h-32 flex-col gap-0.5 overflow-y-auto text-[14px]">
-          {rows.map(([n, q]) => (
-            <li key={n} className="flex justify-between gap-3">
-              <span>{n}</span>
-              <span className="num font-semibold">{q}</span>
-            </li>
+        <div className="flex max-h-40 flex-col gap-3 overflow-y-auto text-[14px]">
+          {groups.map(([bakery, rows]) => (
+            <div key={bakery}>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[13px] font-semibold text-muted">{bakery}</p>
+                <button
+                  type="button"
+                  onClick={() => copy(bakery, supplierMessage(rows.map((r) => ({ name: r.name, qty: r.qty }))))}
+                  className="tap flex min-h-11 items-center gap-1.5 rounded-full bg-accent-soft px-3 text-[13px] font-medium text-link"
+                >
+                  {copied === bakery ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />} {copied === bakery ? "Copied" : "Copy"}
+                </button>
+              </div>
+              <ul className="flex flex-col gap-0.5">
+                {rows.map((r) => (
+                  <li key={r.name} className="flex justify-between gap-3">
+                    <span>{r.name}</span>
+                    <span className="num font-semibold">{r.qty}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="secondary" onClick={copy}>
-            {copied ? <Check size={18} aria-hidden /> : <Copy size={18} aria-hidden />} {copied ? "Copied" : "Copy"}
-          </Button>
           <a
             href={`/admin/batch/export?orders=${ids.join(",")}`}
-            className="tap flex min-h-12 items-center justify-center gap-2 rounded-full bg-accent-soft px-4 text-[15px] font-medium text-link"
+            className="tap col-span-2 flex min-h-12 items-center justify-center gap-2 rounded-full bg-accent-soft px-4 text-[15px] font-medium text-link"
           >
-            <Download size={18} aria-hidden /> Excel
+            <Download size={18} aria-hidden /> Excel (one tab per bakery)
           </a>
           <Button variant="secondary" className="!px-3 !text-[16px] whitespace-nowrap" loading={busy === "ordered"} disabled={pending} onClick={() => mark("ordered")}>
             Mark Ordered

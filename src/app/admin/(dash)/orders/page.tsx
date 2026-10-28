@@ -82,7 +82,7 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
     supabase
       .from("orders")
       .select(
-        "id, code, name, phone, delivery_type, address, landmark, map_url, notes, delivery_date, payment_method, qr_provider, status, paid, seen_by_admin, total, created_at, batch_id, moved_from_batch_id, order_items(id, product_name, qty, selling_price)",
+        "id, code, name, phone, delivery_type, address, landmark, map_url, notes, delivery_date, payment_method, qr_provider, status, paid, seen_by_admin, total, created_at, batch_id, moved_from_batch_id, order_items(id, product_id, product_name, qty, selling_price)",
       )
       .order("created_at", { ascending: false })
       .limit(300),
@@ -121,11 +121,13 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
 
   const targets: MoveTarget[] = batches.slice(0, 6).map((b) => ({ id: b.id, office_date: b.office_date, outside_date: b.outside_date, supplier_ordered: b.supplier_ordered_at !== null }));
   const batchById = new Map(batches.map((b) => [b.id, b]));
+  const { data: prodRows } = await supabase.from("products").select("id, bakery");
+  const bakeryOf = new Map(((prodRows ?? []) as { id: string; bakery: string }[]).map((p) => [p.id, p.bakery]));
   const pickOf = (o: AdminOrder): Pick => ({
     id: o.id,
     code: o.code,
     name: o.name,
-    items: o.order_items.map((i) => ({ name: i.product_name, qty: i.qty })),
+    items: o.order_items.map((i) => ({ name: i.product_name, qty: i.qty, bakery: (i.product_id && bakeryOf.get(i.product_id)) || "Other" })),
   });
   const pickable = live.map(pickOf);
 

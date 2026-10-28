@@ -8,13 +8,14 @@ import { formatDay } from "@/lib/dates";
 import { formatPeso } from "@/lib/money";
 import { BatchPicker } from "../batch-picker";
 import { MoveOrder } from "../orders/move-order";
+import { BAKERY_CONTACT, groupByBakery, supplierMessage } from "@/lib/bakeries";
 import { SupplierTools } from "./supplier-tools";
 
 export const metadata = { title: "Batch summary" };
 
 const COUNTED = ["pending", "ordered", "delivered"] as const;
 type Counted = (typeof COUNTED)[number];
-type Row = { product_name: string; qty: number; supplier_price: number | null; supplier_cost: number | null; sales: number };
+type Row = { bakery: string; product_name: string; qty: number; supplier_price: number | null; supplier_cost: number | null; sales: number };
 
 export default async function BatchPage(props: PageProps<"/admin/batch">) {
   const sp = await props.searchParams;
@@ -39,7 +40,7 @@ export default async function BatchPage(props: PageProps<"/admin/batch">) {
   const asked = (typeof sp.s === "string" ? sp.s.split(",") : []).filter((x): x is Counted => (COUNTED as readonly string[]).includes(x));
   const picked: Counted[] = asked.length > 0 ? asked : ["pending", "ordered"];
   const [{ data: rows }, { count: pendingCount }, { count: orderCount }, { data: statusRows }] = await Promise.all([
-    supabase.rpc("batch_summary_by_status", { p_batch_id: batch.id, p_statuses: picked }),
+    supabase.rpc("batch_supplier_summary", { p_batch_id: batch.id, p_statuses: picked }),
     supabase.from("orders").select("id", { count: "exact", head: true }).eq("batch_id", batch.id).eq("status", "pending"),
     supabase.from("orders").select("id", { count: "exact", head: true }).eq("batch_id", batch.id).in("status", picked),
     supabase.from("orders").select("status").eq("batch_id", batch.id).limit(2000),
@@ -65,14 +66,12 @@ export default async function BatchPage(props: PageProps<"/admin/batch">) {
   const knownCost = items.reduce((n, r) => n + Number(r.supplier_cost ?? 0), 0);
   const missing = items.filter((r) => r.supplier_price === null).length;
 
-  const supplierText = [
-    `Hi! Order for ${formatDay(batch.office_date)}:`,
-    "",
-    ...items.map((r) => `${r.product_name} x ${r.qty}`),
-    "",
-    `Total: ${pieces} pcs`,
-    "Thank you!",
-  ].join("\n");
+  const groups = groupByBakery(items);
+  const blocks = groups.map(([bakery, rs]) => ({
+    bakery,
+    contact: BAKERY_CONTACT[bakery] ?? null,
+    text: supplierMessage(rs.map((r) => ({ name: r.product_name, qty: r.qty })), formatDay(batch.office_date)),
+  }));
 
   const isOpen = open(batch);
 
@@ -150,41 +149,50 @@ export default async function BatchPage(props: PageProps<"/admin/batch">) {
         <EmptyState title="Nothing to order" body="No orders in this batch match the statuses selected above." />
       ) : (
         <>
-          <Card className="overflow-hidden">
-            <table className="w-full text-[15px]">
-              <thead>
-                <tr className="text-left text-[13px] text-muted">
-                  <th className="px-4 pt-4 pb-2 font-medium">Product</th>
-                  <th className="px-4 pt-4 pb-2 text-right font-medium">Qty</th>
-                  <th className="px-4 pt-4 pb-2 text-right font-medium">Supplier cost</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/[0.06]">
-                {items.map((r) => (
-                  <tr key={r.product_name}>
-                    <td className="px-4 py-2.5">{r.product_name}</td>
-                    <td className="num px-4 py-2.5 text-right font-semibold">{r.qty}</td>
-                    <td className="num px-4 py-2.5 text-right text-muted">
-                      {r.supplier_cost === null ? <span className="text-warning">—</span> : formatPeso(r.supplier_cost)}
-                    </td>
+          {groups.map(([bakery, rs]) => (
+            <Card key={bakery} className="overflow-hidden">
+              <p className="px-4 pt-4 text-[17px] font-semibold">{bakery}</p>
+              <table className="w-full text-[15px]">
+                <thead>
+                  <tr className="text-left text-[13px] text-muted">
+                    <th className="px-4 pt-3 pb-2 font-medium">Product</th>
+                    <th className="px-4 pt-3 pb-2 text-right font-medium">Qty</th>
+                    <th className="px-4 pt-3 pb-2 text-right font-medium">Supplier cost</th>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="border-t border-black/[0.08] font-semibold">
-                  <td className="px-4 py-3">{orderCount ?? 0} order(s)</td>
-                  <td className="num px-4 py-3 text-right">{pieces}</td>
-                  <td className="num px-4 py-3 text-right">{formatPeso(knownCost)}</td>
-                </tr>
-              </tfoot>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-black/[0.06]">
+                  {rs.map((r) => (
+                    <tr key={r.product_name}>
+                      <td className="px-4 py-2.5">{r.product_name}</td>
+                      <td className="num px-4 py-2.5 text-right font-semibold">{r.qty}</td>
+                      <td className="num px-4 py-2.5 text-right text-muted">
+                        {r.supplier_cost === null ? <span className="text-warning">—</span> : formatPeso(r.supplier_cost)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t border-black/[0.08] font-semibold">
+                    <td className="px-4 py-3">Subtotal</td>
+                    <td className="num px-4 py-3 text-right">{rs.reduce((n, r) => n + r.qty, 0)}</td>
+                    <td className="num px-4 py-3 text-right">{formatPeso(rs.reduce((n, r) => n + Number(r.supplier_cost ?? 0), 0))}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </Card>
+          ))}
+          <Card className="flex items-center justify-between gap-3 p-4 font-semibold">
+            <span>
+              {orderCount ?? 0} order(s) · <span className="num">{pieces}</span> pcs
+            </span>
+            <span className="num">{formatPeso(knownCost)}</span>
           </Card>
           {missing > 0 ? (
             <p className="-mt-2 text-[13px] text-warning">
               {missing} product(s) have no supplier price, so the supplier cost is incomplete.
             </p>
           ) : null}
-          <SupplierTools text={supplierText} batchId={batch.id} pendingCount={pendingCount ?? 0} />
+          <SupplierTools blocks={blocks} batchId={batch.id} pendingCount={pendingCount ?? 0} />
         </>
       )}
     </div>
