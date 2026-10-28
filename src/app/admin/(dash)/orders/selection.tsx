@@ -1,10 +1,10 @@
 "use client";
 
-import { Check, CheckSquare, Copy, Download, Square, X } from "lucide-react";
+import { Check, CheckSquare, Copy, Download, MessageSquareText, Square, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { groupByBakery, supplierMessage } from "@/lib/bakeries";
+import { BAKERY_SMS, groupBySupplier, smsHref, supplierMessage } from "@/lib/bakeries";
 import { setOrdersStatus } from "./actions";
 
 export type Pick = { id: string; code: string; name: string; items: { name: string; qty: number; bakery: string }[] };
@@ -95,7 +95,7 @@ function SelectionBar() {
       cur.qty += i.qty;
       totals.set(key, cur);
     }
-  const groups = groupByBakery([...totals.values()].sort((a, b) => a.name.localeCompare(b.name)));
+  const groups = groupBySupplier([...totals.values()], (r) => r.name);
   const pieces = [...totals.values()].reduce((n, r) => n + r.qty, 0);
   const ids = [...picked.keys()];
 
@@ -145,6 +145,15 @@ function SelectionBar() {
             <div key={bakery}>
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[13px] font-semibold text-muted">{bakery}</p>
+                <div className="flex items-center gap-1.5">
+                {BAKERY_SMS[bakery] ? (
+                  <a
+                    href={smsHref(BAKERY_SMS[bakery], supplierMessage(rows.map((r) => ({ name: r.name, qty: r.qty }))))}
+                    className="tap flex min-h-11 items-center gap-1.5 rounded-full bg-accent px-3 text-[13px] font-medium text-accent-ink"
+                  >
+                    <MessageSquareText size={15} aria-hidden /> Text
+                  </a>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => copy(bakery, supplierMessage(rows.map((r) => ({ name: r.name, qty: r.qty }))))}
@@ -152,6 +161,7 @@ function SelectionBar() {
                 >
                   {copied === bakery ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />} {copied === bakery ? "Copied" : "Copy"}
                 </button>
+                </div>
               </div>
               <ul className="flex flex-col gap-0.5">
                 {rows.map((r) => (

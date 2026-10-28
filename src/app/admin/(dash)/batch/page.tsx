@@ -8,7 +8,7 @@ import { formatDay } from "@/lib/dates";
 import { formatPeso } from "@/lib/money";
 import { BatchPicker } from "../batch-picker";
 import { MoveOrder } from "../orders/move-order";
-import { BAKERY_CONTACT, groupByBakery, supplierMessage } from "@/lib/bakeries";
+import { BAKERY_CONTACT, BAKERY_SMS, groupByBakery, groupBySupplier, supplierMessage } from "@/lib/bakeries";
 import { SupplierTools } from "./supplier-tools";
 
 export const metadata = { title: "Batch summary" };
@@ -67,9 +67,10 @@ export default async function BatchPage(props: PageProps<"/admin/batch">) {
   const missing = items.filter((r) => r.supplier_price === null).length;
 
   const groups = groupByBakery(items);
-  const blocks = groups.map(([bakery, rs]) => ({
+  const blocks = groupBySupplier(items, (r) => r.product_name).map(([bakery, rs]) => ({
     bakery,
     contact: BAKERY_CONTACT[bakery] ?? null,
+    sms: BAKERY_SMS[bakery] ?? null,
     text: supplierMessage(rs.map((r) => ({ name: r.product_name, qty: r.qty })), formatDay(batch.office_date)),
   }));
 

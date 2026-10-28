@@ -1,12 +1,14 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, MessageSquareText } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, Notice } from "@/components/ui/card";
+import { buttonClass } from "@/components/ui/button";
+import { smsHref } from "@/lib/bakeries";
 import { markBatchOrdered } from "../orders/actions";
 
-export type SupplierBlock = { bakery: string; contact: string | null; text: string };
+export type SupplierBlock = { bakery: string; contact: string | null; sms: string | null; text: string };
 
 async function copyText(text: string) {
   try {
@@ -43,7 +45,12 @@ export function SupplierTools({ blocks, batchId, pendingCount }: { blocks: Suppl
             {b.contact ? <p className="text-[13px] text-muted">{b.contact}</p> : null}
           </div>
           <pre className="font-sans text-[15px] whitespace-pre-wrap text-ink">{b.text}</pre>
-          <Button size="lg" onClick={() => copy(b)}>
+          {b.sms ? (
+            <a href={smsHref(b.sms, b.text)} className={buttonClass("primary", "lg")}>
+              <MessageSquareText size={20} aria-hidden /> Text this order
+            </a>
+          ) : null}
+          <Button size="lg" variant={b.sms ? "secondary" : "primary"} onClick={() => copy(b)}>
             {copied === b.bakery ? <Check size={20} aria-hidden /> : <Copy size={20} aria-hidden />}
             {copied === b.bakery ? "Copied!" : `Copy for ${b.bakery}`}
           </Button>
